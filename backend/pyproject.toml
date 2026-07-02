@@ -1,36 +1,69 @@
 [project]
-name = "backend"
-version = "0.1.0"
-description = "Add your description here"
+name = "focusos-backend"
+version = "1.0.0"
+description = "FocusOS — AI-Powered Productivity Backend (FastAPI)"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "aiohttp>=3.14.1",
-    "asyncpg>=0.31.0",
-    "cachetools>=7.1.4",
-    "cryptography>=49.0.0",
-    "dateparser>=1.4.1",
-    "fastapi>=0.139.0",
-    "httpx>=0.28.1",
-    "locust>=2.44.4",
-    "mistralai>=2.5.1",
-    "numpy>=2.5.0",
-    "opencv-python-headless>=4.13.0.92",
-    "pillow>=12.3.0",
-    "pillow-heif>=1.4.0",
-    "pydantic>=2.13.4",
-    "pyjwt[crypto]>=2.13.0",
-    "pypdf>=6.14.2",
+    # ── Web framework ──────────────────────────────────────
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-multipart>=0.0.9",       # file uploads
+
+    # ── Database ───────────────────────────────────────────
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",               # async PostgreSQL driver
+
+    # ── Auth ───────────────────────────────────────────────
+    "pyjwt[crypto]>=2.9.0",
+    "werkzeug>=3.1.0",               # password hashing (generate/check_password_hash)
+
+    # ── Config ─────────────────────────────────────────────
+    "python-dotenv>=1.0.1",
+
+    # ── Rate limiting ──────────────────────────────────────
+    "slowapi>=0.1.9",
+
+    # ── AI / Gemini ────────────────────────────────────────
+    "mistralai>=1.0.0",
+
+    # ── HTTP client ────────────────────────────────────────
+    "httpx>=0.27.0",
+    "aiohttp>=3.10.0",
+
+    # ── Document processing ────────────────────────────────
+    "pypdf>=4.0.0",
+    "python-docx>=1.1.0",
+    "pillow>=10.4.0",
+    "pillow-heif>=0.18.0",
     "pytesseract>=0.3.13",
-    "pytest>=9.1.1",
-    "pytest-cov>=7.1.0",
-    "python-dateutil>=2.9.0.post0",
-    "python-docx>=1.2.0",
-    "python-dotenv>=1.2.2",
-    "rapidfuzz>=3.14.5",
-    "reportlab>=5.0.0",
-    "sentry-sdk[fastapi]>=2.64.0",
-    "slowapi>=0.1.10",
-    "sqlalchemy[asyncio]>=2.0.51",
-    "uvicorn>=0.49.0",
+    "opencv-python-headless>=4.10.0",
+
+    # ── PDF report generation ──────────────────────────────
+    "reportlab>=4.2.0",
+
+    # ── Data / utilities ───────────────────────────────────
+    "pydantic>=2.8.0",
+    "numpy>=1.26.0",
+    "python-dateutil>=2.9.0",
+    "dateparser>=1.2.0",
+    "rapidfuzz>=3.9.0",
+    "cachetools>=5.4.0",
+    "cryptography>=43.0.0",
+
+    # ── Monitoring ─────────────────────────────────────────
+    "sentry-sdk[fastapi]>=2.14.0",
+
+    # ── Testing ────────────────────────────────────────────
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",                 # async test client
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
