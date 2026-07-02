@@ -10,16 +10,16 @@ from agents.rescue_agent import RescueAgent
 
 class TestRescueAgent(unittest.TestCase):
     def setUp(self):
-        """Set up a mocked GeminiService and initialize RescueAgent."""
-        self.mock_gemini = MagicMock()
-        self.agent = RescueAgent(self.mock_gemini)
+        """Set up a mocked MistralService and initialize RescueAgent."""
+        self.mock_mistral = MagicMock()
+        self.agent = RescueAgent(self.mock_mistral)
 
     def test_generate_recovery_plan_empty_tasks(self):
         """Verify behavior when no tasks are provided."""
         result = self.agent.generate_recovery_plan([], {})
         self.assertFalse(result["risk_detected"])
         self.assertEqual(result["strategies"], [])
-        self.mock_gemini.generate_structured.assert_not_called()
+        self.mock_mistral.generate_structured.assert_not_called()
 
     def test_generate_recovery_plan_structure(self):
         """Verify the agent returns the 3 deterministic strategies."""
@@ -40,7 +40,7 @@ class TestRescueAgent(unittest.TestCase):
             "daily_available_hours": 3
         }
 
-        self.mock_gemini.generate_structured.return_value = {
+        self.mock_mistral.generate_structured.return_value = {
             "risk_detected": True,
             "risk_level": "High",
             "strategies": [{"name": "Safe"}, {"name": "Balanced"}, {"name": "Aggressive"}]

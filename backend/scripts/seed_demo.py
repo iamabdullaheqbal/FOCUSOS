@@ -131,7 +131,7 @@ async def seed_demo_data(email: str = "demo@focusos.local") -> None:
                          sys_confidence=random.randint(75, 99),
                          daily_summary=f"Optimised schedule for {target}",
                          strategy="Deep Work Blocks", available_hours=8,
-                         generated_by="gemini", planning_brief="[]",
+                         generated_by="mistral", planning_brief="[]",
                          twin_simulation="null", backlog="[]")
             db.add(s)
             await db.flush()

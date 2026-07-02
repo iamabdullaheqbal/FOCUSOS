@@ -7,7 +7,7 @@ Includes Vector-Ready architecture, Semantic Chunking, and Document Metadata.
 
 import uuid
 from typing import Dict, Any, List
-from services.ai_service import MistralService
+from services.mistral_service import MistralService
 import logging
 
 logger = logging.getLogger(__name__)

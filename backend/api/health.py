@@ -32,13 +32,13 @@ async def health_db():
         return JSONResponse(status_code=503, content={"status": "error", "message": str(exc)})
 
 
-@router.get("/gemini")
-async def health_gemini(request: Request):
-    gemini = request.app.state.gemini_service
-    if not gemini:
+@router.get("/ai")
+async def health_ai(request: Request):
+    ai_service = request.app.state.gemini_service
+    if not ai_service:
         from fastapi.responses import JSONResponse
-        return JSONResponse(status_code=503, content={"status": "error", "message": "GeminiService not initialised"})
-    result = gemini.health_check()
+        return JSONResponse(status_code=503, content={"status": "error", "message": "AI service not initialised"})
+    result = ai_service.health_check()
     status = 200 if result.get("status") == "ok" else 503
     from fastapi.responses import JSONResponse
     return JSONResponse(status_code=status, content=result)

@@ -22,6 +22,18 @@ class EntityExtractor:
         if goal_match and not "target_name" in entities and goal_match.group(1).strip().lower() not in ["goal", "task"]:
             entities["target_name"] = goal_match.group(1).strip()
             
+        # Meeting attendees ("with sir tayyab", "with John")
+        if intent == "meeting_scheduling":
+            with_match = re.search(
+                r'\bwith\s+([a-zA-Z][a-zA-Z\s\.]+?)(?:\s+on|\s+at|\s+for|\s+13|\s+\d|$)',
+                transcript, re.IGNORECASE
+            )
+            if with_match:
+                entities["attendee"] = with_match.group(1).strip()
+                # Also use as target_name if not set
+                if not entities.get("target_name"):
+                    entities["target_name"] = f"Meeting with {entities['attendee']}"
+
         # Navigation targets
         nav_match = re.search(r'(?:open|show|go to)\s+(dashboard|settings|goals|planner|calendar|rescue|analytics|documents|vision)', text_lower)
         if nav_match:
@@ -38,18 +50,42 @@ class EntityExtractor:
 
         # 2. Extract Dates/Times
         from dateparser.search import search_dates
-        from datetime import datetime
+        from datetime import datetime, timezone as tz
+        now = datetime.now(tz.utc)
         try:
             dates_found = search_dates(
                 transcript,
-                settings={'PREFER_DATES_FROM': 'future', 'RELATIVE_BASE': datetime.now()}
+                settings={
+                    'PREFER_DATES_FROM': 'future',
+                    'RELATIVE_BASE': now.replace(tzinfo=None),   # naive base avoids year drift
+                    'RETURN_AS_TIMEZONE_AWARE': False,
+                    'PREFER_DAY_OF_MONTH': 'current',
+                    'PREFER_MONTH_OF_YEAR': 'current',
+                    'RETURN_TIME_AS_PERIOD': False,
+                }
             )
         except Exception:
             dates_found = None
+
         if dates_found:
-            date_str, dt = dates_found[0]
-            entities["target_date"] = dt.isoformat()
-            entities["target_date_raw"] = date_str
+            # Pick the best match — prefer entries with a real time component
+            # (skip pure words like "me" that dateparser sometimes misparses)
+            best_dt = None
+            best_raw = None
+            for raw_str, dt in dates_found:
+                # Skip if dateparser matched a noise word like "me", "a", etc.
+                if len(raw_str.strip()) <= 2:
+                    continue
+                # Prefer entries that carry actual time info (not midnight default)
+                if best_dt is None or (dt.hour != 0 and best_dt.hour == 0):
+                    best_dt = dt
+                    best_raw = raw_str
+
+            if best_dt:
+                # Attach UTC timezone
+                aware_dt = best_dt.replace(tzinfo=tz.utc)
+                entities["target_date"] = aware_dt.isoformat()
+                entities["target_date_raw"] = best_raw
             
         # Extract Durations (e.g. "for 30 minutes")
         duration_match = re.search(r'for\s+(\d+)\s+(minute|hour|day)s?', text_lower)

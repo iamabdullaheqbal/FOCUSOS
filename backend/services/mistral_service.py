@@ -11,7 +11,7 @@ import logging
 import time
 from typing import Any, Generator
 
-from mistralai import Mistral
+from mistralai.client import Mistral
 from cachetools import TTLCache
 
 logger = logging.getLogger(__name__)

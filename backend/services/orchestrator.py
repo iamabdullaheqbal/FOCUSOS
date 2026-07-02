@@ -18,7 +18,7 @@ def _sync_session():
 class OrchestratorService:
     """Coordinates multi-agent workflows and maintains the global activity feed."""
 
-    def __init__(self, gemini_service):
+    def __init__(self, ai_service):
         from agents.vision_agent import VisionAgent
         from agents.priority_agent import PriorityAgent
         from agents.planning_agent import PlanningAgent
@@ -28,15 +28,15 @@ class OrchestratorService:
         from agents.coach_agent import CoachAgent
         from agents.reflection_agent import ReflectionAgent
 
-        self.gemini = gemini_service
-        self.vision = VisionAgent(gemini_service)
-        self.priority = PriorityAgent(gemini_service)
-        self.planning = PlanningAgent(gemini_service)
-        self.rescue = RescueAgent(gemini_service)
-        self.twin = DigitalTwinAgent(gemini_service)
-        self.accountability = AccountabilityAgent(gemini_service)
-        self.coach = CoachAgent(gemini_service)
-        self.reflection = ReflectionAgent(gemini_service)
+        self.ai_service = ai_service
+        self.vision = VisionAgent(ai_service)
+        self.priority = PriorityAgent(ai_service)
+        self.planning = PlanningAgent(ai_service)
+        self.rescue = RescueAgent(ai_service)
+        self.twin = DigitalTwinAgent(ai_service)
+        self.accountability = AccountabilityAgent(ai_service)
+        self.coach = CoachAgent(ai_service)
+        self.reflection = ReflectionAgent(ai_service)
 
     # ── Event bus ─────────────────────────────────────────────────────────────
 

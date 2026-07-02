@@ -10,16 +10,16 @@ from agents.digital_twin_agent import DigitalTwinAgent
 
 class TestDigitalTwinAgent(unittest.TestCase):
     def setUp(self):
-        """Set up a mocked GeminiService and initialize DigitalTwinAgent."""
-        self.mock_gemini = MagicMock()
-        self.agent = DigitalTwinAgent(self.mock_gemini)
+        """Set up a mocked MistralService and initialize DigitalTwinAgent."""
+        self.mock_mistral = MagicMock()
+        self.agent = DigitalTwinAgent(self.mock_mistral)
 
     def test_simulate_scenario_empty(self):
         """Verify baseline behavior when no tasks or scenario are provided."""
         result = self.agent.simulate_scenario([], {}, {})
         self.assertEqual(result["projected_state"]["success_probability"], 100)
         self.assertEqual(result["projected_state"]["risk_level"], "Low")
-        self.mock_gemini.generate_structured.assert_not_called()
+        self.mock_mistral.generate_structured.assert_not_called()
 
     def test_simulate_scenario_structure(self):
         """Verify the agent returns proper twin structure."""
@@ -35,7 +35,7 @@ class TestDigitalTwinAgent(unittest.TestCase):
             "schedule_stability": 70,
             "capacity_impact": 10
         }
-        self.mock_gemini.generate_structured.return_value = mock_response
+        self.mock_mistral.generate_structured.return_value = mock_response
 
         # Input data
         tasks = [
@@ -58,7 +58,7 @@ class TestDigitalTwinAgent(unittest.TestCase):
             "daily_available_hours": 4
         }
 
-        with patch("agents.digital_twin_agent.execute_hybrid", side_effect=lambda local, gemini, threshold: gemini()):
+        with patch("agents.digital_twin_agent.execute_hybrid", side_effect=lambda local, mistral, threshold: mistral()):
             result = self.agent.simulate_scenario(tasks, scenario, availability)
 
         self.assertIn("projected_state", result)

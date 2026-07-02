@@ -53,6 +53,8 @@ export const VoiceCopilot: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [analytics, setAnalytics] = useState<any>(null);
+  const [speechError, setSpeechError] = useState<string | null>(null);
+  const [speechSupported, setSpeechSupported] = useState(true);
   
   const recognitionRef = useRef<any>(null);
 
@@ -85,45 +87,81 @@ export const VoiceCopilot: React.FC = () => {
     }
   };
 
+  // Store the SpeechRecognition constructor (set once on mount)
+  const SpeechRecognitionRef = useRef<any>(null);
+
   useEffect(() => {
-    // Initialize Web Speech API
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = true;
-      
-      recognitionRef.current.onresult = (event: any) => {
-        let currentTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          currentTranscript += event.results[i][0].transcript;
-        }
-        setTranscript(currentTranscript);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = (event: any) => {
-        console.error("Speech recognition error", event.error);
-        setIsListening(false);
-      };
-    } else {
-      console.warn("Web Speech API is not supported in this browser.");
+    if (!SpeechRecognition) {
+      setSpeechSupported(false);
+      return undefined;
     }
-  }, [transcript]);
+    SpeechRecognitionRef.current = SpeechRecognition;
+    return () => {
+      // Abort any active session on unmount
+      recognitionRef.current?.abort();
+      recognitionRef.current = null;
+    };
+  }, []);
+
+  const createRecognition = () => {
+    const SpeechRecognition = SpeechRecognitionRef.current;
+    if (!SpeechRecognition) return null;
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: any) => {
+      let currentTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        currentTranscript += event.results[i][0].transcript;
+      }
+      setTranscript(currentTranscript);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognition.onerror = (event: any) => {
+      setIsListening(false);
+      recognitionRef.current = null;
+      if (event.error === 'network') {
+        setSpeechError('Voice input unavailable on this connection. Type your command in the box below.');
+      } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+        setSpeechError('Microphone access denied. Allow microphone access in browser settings, or type your command below.');
+      } else if (event.error === 'no-speech') {
+        setSpeechError(null);
+      } else {
+        setSpeechError(`Recognition unavailable (${event.error}). You can still type commands below.`);
+      }
+    };
+
+    return recognition;
+  };
 
   const toggleListen = () => {
     if (isListening) {
       recognitionRef.current?.stop();
+      recognitionRef.current = null;
       setIsListening(false);
     } else {
-      if (!transcript) {
-        setResult(null);
+      setSpeechError(null);
+      if (!transcript) setResult(null);
+      // Always create a fresh instance — SpeechRecognition can't be restarted
+      const recognition = createRecognition();
+      if (!recognition) return;
+      recognitionRef.current = recognition;
+      try {
+        recognition.start();
+        setIsListening(true);
+      } catch (e) {
+        recognitionRef.current = null;
+        setSpeechError('Could not start microphone. Please try again.');
       }
-      recognitionRef.current?.start();
-      setIsListening(true);
     }
   };
 
@@ -154,12 +192,27 @@ export const VoiceCopilot: React.FC = () => {
         <p className="text-gray-400 font-medium">Control FocusOS entirely through natural language. Speak your intent.</p>
       </motion.div>
 
+      {/* Speech API status banner */}
+      {!speechSupported && (
+        <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+          <MicOff className="w-4 h-4 shrink-0" />
+          Web Speech API is not supported in this browser. Use the text box below to type your commands.
+        </div>
+      )}
+      {speechError && speechSupported && (
+        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
+          <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{speechError}</span>
+          <button onClick={() => setSpeechError(null)} className="ml-auto text-rose-400 hover:text-white text-xs underline shrink-0">Dismiss</button>
+        </div>
+      )}
+
       {/* SECTION 1: Intelligence KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <AnimatedKpi value={result ? result.structured_result?.execution_time_ms || 0 : 0} suffix="ms" label="Execution Time" icon={Activity} delay={0.1} colorClass="text-purple-400" />
         <AnimatedKpi value={result ? 100 : 0} suffix="%" label="Execution Success" icon={CheckCircle2} delay={0.2} colorClass="text-emerald-400" />
         <AnimatedKpi value={result ? result.nlu?.confidence || 0 : analytics?.ai_confidence_score || 0} suffix="%" label="AI Confidence" icon={Cpu} delay={0.3} colorClass="text-cyan-400" />
-        <AnimatedKpi value={result ? (result.structured_result?.used_gemini ? "Gemini" : "Local") : "Idle"} label="Routing Engine" icon={Network} delay={0.4} colorClass="text-pink-400" />
+        <AnimatedKpi value={result ? (result.structured_result?.used_mistral ? "Mistral" : "Local") : "Idle"} label="Routing Engine" icon={Network} delay={0.4} colorClass="text-pink-400" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -173,7 +226,14 @@ export const VoiceCopilot: React.FC = () => {
             
             <button
               onClick={toggleListen}
-              className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 relative z-10 ${isListening ? 'bg-purple-500 text-white animate-pulse shadow-[0_0_20px_rgba(168,85,247,0.5)]' : 'bg-white/5 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400 border border-white/10'}`}
+              disabled={!speechSupported}
+              className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 relative z-10 ${
+                !speechSupported
+                  ? 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5'
+                  : isListening
+                  ? 'bg-purple-500 text-white animate-pulse shadow-[0_0_20px_rgba(168,85,247,0.5)]'
+                  : 'bg-white/5 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400 border border-white/10'
+              }`}
             >
               {isListening ? <Mic className="w-10 h-10" /> : <MicOff className="w-10 h-10" />}
             </button>

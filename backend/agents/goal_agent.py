@@ -5,7 +5,7 @@ Analyzes long-term goals and generates milestones, blockers, and forecasts.
 """
 
 from typing import Dict, Any, List
-from services.ai_service import MistralService
+from services.mistral_service import MistralService
 from models.goal import Goal, Habit
 from agents.hybrid_inference import execute_hybrid
 import json

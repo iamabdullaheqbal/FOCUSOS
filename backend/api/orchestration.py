@@ -22,15 +22,15 @@ async def run_pipeline(
     image: UploadFile = File(...),
     user_id: str = Depends(get_current_user_id),
 ):
-    gemini = request.app.state.gemini_service
-    if not gemini:
-        raise HTTPException(status_code=503, detail="GeminiService not available")
+    ai_service = request.app.state.gemini_service
+    if not ai_service:
+        raise HTTPException(status_code=503, detail="AI service not available")
     if image.content_type not in ALLOWED_MIMES:
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {image.content_type}")
 
     image_bytes = await image.read()
     try:
-        orchestrator = OrchestratorService(gemini)
+        orchestrator = OrchestratorService(ai_service)
         availability = {"daily_available_hours": 6, "preferred_work_hours": {"start": "09:00", "end": "21:00"}}
         result = orchestrator.run_pipeline(image_bytes, image.content_type, availability)
         return result
@@ -44,11 +44,11 @@ async def execute_system(
     request: Request,
     user_id: str = Depends(get_current_user_id),
 ):
-    gemini = request.app.state.gemini_service
-    if not gemini:
-        raise HTTPException(status_code=503, detail="GeminiService not available")
+    ai_service = request.app.state.gemini_service
+    if not ai_service:
+        raise HTTPException(status_code=503, detail="AI service not available")
     try:
-        orchestrator = OrchestratorService(gemini)
+        orchestrator = OrchestratorService(ai_service)
         result = orchestrator.evaluate_system_state(user_id)
         return result
     except Exception as e:

@@ -92,7 +92,7 @@ async def create_goal(
         raise HTTPException(status_code=400, detail="Title is required")
 
     from services.goal_service import GoalService
-    gemini = request.app.state.gemini_service
+    ai_service = request.app.state.gemini_service
     try:
         goal = GoalService.create_goal(
             user_id=user_id,
@@ -100,7 +100,7 @@ async def create_goal(
             description=body.description or "",
             category=body.category,
             target_date=body.target_date,
-            gemini_service=gemini,
+            ai_service=ai_service,
         )
         return {"status": "success", "data": goal}
     except ValueError as e:

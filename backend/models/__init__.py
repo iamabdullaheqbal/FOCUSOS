@@ -6,6 +6,7 @@ from .goal import Goal, Milestone, Habit, HabitLog
 from .notification import Notification
 from .intervention import Intervention, Threat, RescuePlan, RescueExecution
 from .schedule import Schedule, ScheduleSlot
+from .calendar_event import CalendarEvent
 from .intelligence import AccountabilityMetrics, CoachReport, ReflectionReport, ExecutionProfile, WeeklyReview, CommandLog
 from .telemetry import AgentExecutionLog, TwinSimulationLog, OrchestratorEvent
 
@@ -16,6 +17,7 @@ __all__ = [
     "Notification",
     "Intervention", "Threat", "RescuePlan", "RescueExecution",
     "Schedule", "ScheduleSlot",
+    "CalendarEvent",
     "AccountabilityMetrics", "CoachReport", "ReflectionReport", "ExecutionProfile", "WeeklyReview", "CommandLog",
     "AgentExecutionLog", "TwinSimulationLog", "OrchestratorEvent",
 ]

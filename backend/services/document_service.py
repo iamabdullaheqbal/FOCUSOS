@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class DocumentService:
 
     @classmethod
-    def process_file(cls, file, user_id: Optional[str] = None, gemini_service=None) -> Dict[str, Any]:
+    def process_file(cls, file, user_id: Optional[str] = None, ai_service=None) -> Dict[str, Any]:
         import pypdf
         import docx as _docx
 
@@ -45,7 +45,7 @@ class DocumentService:
             execution = ExecutionEngine.execute(
                 source="document",
                 transcript=text[:2000],
-                gemini_service=gemini_service,
+                ai_service=ai_service,
                 user_id=user_id,
             )
 

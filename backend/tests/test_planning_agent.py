@@ -10,16 +10,16 @@ from agents.planning_agent import PlanningAgent
 
 class TestPlanningAgent(unittest.TestCase):
     def setUp(self):
-        """Set up a mocked GeminiService and initialize PlanningAgent."""
-        self.mock_gemini = MagicMock()
-        self.agent = PlanningAgent(self.mock_gemini)
+        """Set up a mocked MistralService and initialize PlanningAgent."""
+        self.mock_mistral = MagicMock()
+        self.agent = PlanningAgent(self.mock_mistral)
 
     def test_generate_plan_empty_tasks(self):
         """Verify behavior when no tasks are provided."""
         result = self.agent.generate_plan([], {})
         self.assertEqual(result["schedule"], [])
         self.assertEqual(result["confidence_score"], 100)
-        self.mock_gemini.generate_structured.assert_not_called()
+        self.mock_mistral.generate_structured.assert_not_called()
 
     def test_generate_plan_structure(self):
         """Verify the agent correctly formats the prompt and returns structured data."""
@@ -44,7 +44,7 @@ class TestPlanningAgent(unittest.TestCase):
             "daily_summary": "Complete React Assignment before noon and start Interview Preparation.",
             "confidence_score": 92
         }
-        self.mock_gemini.generate_structured.return_value = mock_response
+        self.mock_mistral.generate_structured.return_value = mock_response
 
         # Input data
         tasks = [
@@ -78,9 +78,9 @@ class TestPlanningAgent(unittest.TestCase):
         self.assertEqual(result["schedule"][0]["task"], "React Assignment")
         self.assertEqual(result["confidence_score"], 92)
 
-        # Verify GeminiService was called with the correct parameters
-        self.mock_gemini.generate_structured.assert_called_once()
-        call_kwargs = self.mock_gemini.generate_structured.call_args.kwargs
+        # Verify MistralService was called with the correct parameters
+        self.mock_mistral.generate_structured.assert_called_once()
+        call_kwargs = self.mock_mistral.generate_structured.call_args.kwargs
         
         # Verify prompts
         self.assertIn("executive assistant", call_kwargs["system_prompt"])

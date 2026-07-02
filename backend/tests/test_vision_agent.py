@@ -10,9 +10,9 @@ from agents.vision_agent import VisionAgent
 
 class TestVisionAgent(unittest.TestCase):
     def setUp(self):
-        """Set up a mocked GeminiService and initialize VisionAgent."""
-        self.mock_gemini = MagicMock()
-        self.agent = VisionAgent(self.mock_gemini)
+        """Set up a mocked MistralService and initialize VisionAgent."""
+        self.mock_mistral = MagicMock()
+        self.agent = VisionAgent(self.mock_mistral)
 
     def test_extract_tasks_structure(self):
         """Verify the agent correctly formats the prompt and returns structured data."""
@@ -37,7 +37,7 @@ class TestVisionAgent(unittest.TestCase):
             ],
             "summary": "Assignment with high urgency detected."
         }
-        self.mock_gemini.generate_vision.return_value = mock_response
+        self.mock_mistral.generate_vision.return_value = mock_response
 
         # Input data
         image_bytes = b"fakeimagebytes12345"
@@ -53,9 +53,9 @@ class TestVisionAgent(unittest.TestCase):
         self.assertEqual(len(result["deadlines"]), 1)
         self.assertEqual(len(result["action_items"]), 2)
 
-        # Verify GeminiService was called with the correct parameters
-        self.mock_gemini.generate_vision.assert_called_once()
-        call_kwargs = self.mock_gemini.generate_vision.call_args.kwargs
+        # Verify MistralService was called with the correct parameters
+        self.mock_mistral.generate_vision.assert_called_once()
+        call_kwargs = self.mock_mistral.generate_vision.call_args.kwargs
         
         # Verify inputs
         self.assertEqual(call_kwargs["image_bytes"], image_bytes)

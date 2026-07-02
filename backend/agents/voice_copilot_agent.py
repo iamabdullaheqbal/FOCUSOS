@@ -6,7 +6,7 @@ Acts as the NLU router for the entire OS.
 """
 
 from typing import Dict, Any
-from services.ai_service import MistralService
+from services.mistral_service import MistralService
 
 class VoiceCopilotAgent:
 

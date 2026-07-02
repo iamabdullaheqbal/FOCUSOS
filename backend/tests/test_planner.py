@@ -9,5 +9,5 @@ def client():
         yield client
 
 def test_planner_endpoint(client):
-    # Just verify the route exists, don't execute Gemini unless mocked
+    # Just verify the route exists, don't execute mistral unless mocked
     pass

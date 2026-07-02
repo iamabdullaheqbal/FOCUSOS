@@ -23,6 +23,7 @@ class CalendarService:
         from models.task import Task
         from models.goal import Goal
         from models.schedule import Schedule
+        from models.calendar_event import CalendarEvent
         from sqlalchemy import select
         from sqlalchemy.orm import selectinload
 
@@ -32,7 +33,26 @@ class CalendarService:
             start = _parse_dt(start_date)
             end   = _parse_dt(end_date)
 
-            # Tasks as deadline events
+            # ── 1. CalendarEvent rows (meetings scheduled via voice / manual) ──
+            ce_q = select(CalendarEvent).where(CalendarEvent.user_id == user_id)
+            if start:
+                ce_q = ce_q.where(CalendarEvent.start_time >= start)
+            if end:
+                ce_q = ce_q.where(CalendarEvent.start_time <= end)
+            for ev in session.execute(ce_q).scalars().all():
+                events.append({
+                    "id":          ev.id,
+                    "title":       ev.title,
+                    "start":       ev.start_time.isoformat() if ev.start_time else None,
+                    "end":         ev.end_time.isoformat()   if ev.end_time   else None,
+                    "type":        ev.event_type,
+                    "attendees":   ev.attendees,
+                    "description": ev.description,
+                    "source":      ev.source,
+                    "risk_level":  "Low",
+                })
+
+            # ── 2. Tasks as deadline events ────────────────────────────────────
             q = select(Task).where(Task.user_id == user_id)
             if start:
                 q = q.where(Task.deadline >= start)
@@ -47,7 +67,7 @@ class CalendarService:
                                 "start": st.isoformat(), "end": dl.isoformat(),
                                 "type": "deadline", "risk_level": "High" if (t.priority_score or 0) > 80 else "Low"})
 
-            # Goals as single-day events
+            # ── 3. Goals as single-day events ──────────────────────────────────
             for g in session.execute(select(Goal).where(Goal.user_id == user_id)).scalars().all():
                 if not g.target_date:
                     continue
@@ -62,12 +82,12 @@ class CalendarService:
                         continue
                     events.append({"id": g.id, "title": f"Goal: {g.title}",
                                    "start": g_dt.replace(hour=9, minute=0).isoformat(),
-                                   "end": g_dt.replace(hour=10, minute=0).isoformat(),
+                                   "end":   g_dt.replace(hour=10, minute=0).isoformat(),
                                    "type": "goal", "risk_level": "Medium"})
                 except Exception:
                     pass
 
-            # Schedule slots
+            # ── 4. Schedule slots ──────────────────────────────────────────────
             for sched in session.execute(
                 select(Schedule).where(Schedule.user_id == user_id).options(selectinload(Schedule.slots))
             ).scalars().all():
@@ -81,11 +101,14 @@ class CalendarService:
                         sh, sm = map(int, slot.start_time.split(":"))
                         eh, em = map(int, slot.end_time.split(":"))
                         events.append({
-                            "id": slot.id, "title": slot.task_title,
-                            "start": base.replace(hour=sh, minute=sm).isoformat(),
-                            "end": base.replace(hour=eh, minute=em).isoformat(),
-                            "type": "meeting" if "meeting" in slot.task_title.lower() else "task",
-                            "is_break": slot.is_break, "focus_block": slot.focus_block, "risk_level": "Low",
+                            "id":          slot.id,
+                            "title":       slot.task_title,
+                            "start":       base.replace(hour=sh, minute=sm).isoformat(),
+                            "end":         base.replace(hour=eh, minute=em).isoformat(),
+                            "type":        "meeting" if "meeting" in slot.task_title.lower() else "task",
+                            "is_break":    slot.is_break,
+                            "focus_block": slot.focus_block,
+                            "risk_level":  "Low",
                         })
                 except Exception:
                     pass
@@ -115,9 +138,23 @@ class CalendarService:
     @classmethod
     def reschedule_event(cls, event_id: str, new_start: Optional[str], new_end: Optional[str], user_id: Optional[str] = None) -> bool:
         from models.task import Task
+        from models.calendar_event import CalendarEvent
         from sqlalchemy import select
         session, engine = _sync_session()
         try:
+            # Try CalendarEvent first
+            ev = session.execute(
+                select(CalendarEvent).where(CalendarEvent.id == event_id, CalendarEvent.user_id == user_id)
+            ).scalar_one_or_none()
+            if ev:
+                if new_start:
+                    ev.start_time = _parse_dt(new_start) or ev.start_time
+                if new_end:
+                    ev.end_time = _parse_dt(new_end) or ev.end_time
+                session.commit()
+                return True
+
+            # Fall back to Task deadline
             task = session.execute(select(Task).where(Task.user_id == user_id, Task.id == event_id)).scalar_one_or_none()
             if not task:
                 return False

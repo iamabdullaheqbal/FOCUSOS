@@ -60,7 +60,7 @@ class GoalService:
             session.close(); engine.dispose()
 
     @classmethod
-    def create_goal(cls, user_id: str, title: str, description: str, category: str, target_date: Optional[str], gemini_service=None) -> Dict:
+    def create_goal(cls, user_id: str, title: str, description: str, category: str, target_date: Optional[str], ai_service=None) -> Dict:
         from models.goal import Goal, Milestone
         from models.task import Task
         from agents.goal_agent import GoalAgent
@@ -77,9 +77,9 @@ class GoalService:
                 raise ValueError(f"Duplicate request: Goal '{title}' was recently created.")
 
             agent_data = {}
-            if gemini_service:
+            if ai_service:
                 try:
-                    agent_data = GoalAgent(gemini_service).analyze_goal(title, description)
+                    agent_data = GoalAgent(ai_service).analyze_goal(title, description)
                 except Exception as e:
                     logger.warning("GoalAgent failed, proceeding without AI data: %s", e)
 

@@ -122,11 +122,11 @@ async def run_priority_agent(
     db: AsyncSession = Depends(get_db),
 ):
     from agents.priority_agent import PriorityAgent
-    gemini = request.app.state.gemini_service
-    if not gemini:
-        raise HTTPException(status_code=503, detail="GeminiService not available")
+    ai_service = request.app.state.gemini_service
+    if not ai_service:
+        raise HTTPException(status_code=503, detail="AI service not available")
 
-    pa = PriorityAgent(gemini)
+    pa = PriorityAgent(ai_service)
     count_result = await db.execute(
         select(Task).where(Task.user_id == user_id, Task.status != "done")
     )
@@ -196,9 +196,9 @@ async def run_planning_agent(
     from services.telemetry_service import TelemetryService
     from services.intervention_engine import InterventionEngine
 
-    gemini = request.app.state.gemini_service
-    if not gemini:
-        raise HTTPException(status_code=503, detail="GeminiService not available")
+    ai_service = request.app.state.gemini_service
+    if not ai_service:
+        raise HTTPException(status_code=503, detail="AI service not available")
 
     availability = body.availability or {
         "daily_available_hours": 8,
@@ -208,7 +208,7 @@ async def run_planning_agent(
     try:
         t0 = time.time()
         _set("planning", "running")
-        result = PlanningAgent(gemini).generate_plan(body.tasks, availability)
+        result = PlanningAgent(ai_service).generate_plan(body.tasks, availability)
 
         target_date = (
             result.get("schedule", [{}])[0].get("date", datetime.now().strftime("%Y-%m-%d"))
@@ -272,15 +272,15 @@ async def run_rescue_agent(
     from agents.rescue_agent import RescueAgent
     from services.telemetry_service import TelemetryService
 
-    gemini = request.app.state.gemini_service
-    if not gemini:
-        raise HTTPException(status_code=503, detail="GeminiService not available")
+    ai_service = request.app.state.gemini_service
+    if not ai_service:
+        raise HTTPException(status_code=503, detail="AI service not available")
 
     availability = body.availability or {"daily_available_hours": 3}
     try:
         t0 = time.time()
         _set("rescue", "running")
-        result = RescueAgent(gemini).generate_recovery_plan(body.tasks, availability)
+        result = RescueAgent(ai_service).generate_recovery_plan(body.tasks, availability)
         TelemetryService.log_execution("Rescue Agent", "Recovery Plan", "success", t0, 92)
         _set("rescue", "done")
 
@@ -338,9 +338,9 @@ async def run_digital_twin(
     from services.availability_service import AvailabilityService
     from services.telemetry_service import TelemetryService
 
-    gemini = request.app.state.gemini_service
-    if not gemini:
-        raise HTTPException(status_code=503, detail="GeminiService not available")
+    ai_service = request.app.state.gemini_service
+    if not ai_service:
+        raise HTTPException(status_code=503, detail="AI service not available")
     if not body.scenario:
         raise HTTPException(status_code=400, detail="No scenario provided")
 
@@ -351,7 +351,7 @@ async def run_digital_twin(
     try:
         t0 = time.time()
         _set("twin", "running")
-        result = DigitalTwinAgent(gemini).simulate_scenario(tasks, body.scenario, availability)
+        result = DigitalTwinAgent(ai_service).simulate_scenario(tasks, body.scenario, availability)
         TelemetryService.log_execution("Digital Twin Agent", "Simulation", "success", t0, 90)
         _set("twin", "done")
         return {"agent": "twin", "status": "success", "data": result, "timestamp": _now_iso()}
@@ -389,16 +389,16 @@ async def run_vision_agent(
     from agents.vision_agent import VisionAgent
     from services.telemetry_service import TelemetryService
 
-    gemini = request.app.state.gemini_service
-    if not gemini:
-        raise HTTPException(status_code=503, detail="GeminiService not available")
+    ai_service = request.app.state.gemini_service
+    if not ai_service:
+        raise HTTPException(status_code=503, detail="AI service not available")
     if image.content_type not in ALLOWED_IMAGE_MIMES:
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {image.content_type}")
 
     try:
         t0 = time.time()
         raw_bytes = await image.read()
-        agent = VisionAgent(gemini)
+        agent = VisionAgent(ai_service)
         _set("vision", "running")
 
         image_bytes = agent.preprocess_image(raw_bytes)
@@ -411,7 +411,7 @@ async def run_vision_agent(
             raw_text = gemini_res.get("summary", "")
 
         execution = ExecutionEngine.execute(
-            source="vision", transcript=raw_text, gemini_service=gemini, user_id=user_id
+            source="vision", transcript=raw_text, gemini_service=ai_service, user_id=user_id
         )
         TelemetryService.log_execution("Vision Agent", "OCR & Execution", "success", t0, int(ocr_conf * 100))
         _set("vision", "done")
@@ -493,11 +493,11 @@ async def run_accountability(
 ):
     from agents.accountability_agent import AccountabilityAgent
     from services.telemetry_service import TelemetryService
-    gemini = request.app.state.gemini_service
+    ai_service = request.app.state.gemini_service
     _set("accountability", "running")
     try:
         t0 = time.time()
-        result = AccountabilityAgent(gemini).generate_metrics(body.active_tasks, body.completed_tasks, body.overdue_tasks)
+        result = AccountabilityAgent(ai_service).generate_metrics(body.active_tasks, body.completed_tasks, body.overdue_tasks)
         TelemetryService.log_execution("Accountability Agent", "Generate Metrics", "success", t0, 80)
         return {"agent": "accountability", "status": "success", "data": result}
     except Exception as e:
@@ -516,11 +516,11 @@ async def run_coach(
 ):
     from agents.coach_agent import CoachAgent
     from services.telemetry_service import TelemetryService
-    gemini = request.app.state.gemini_service
+    ai_service = request.app.state.gemini_service
     _set("coach", "running")
     try:
         t0 = time.time()
-        result = CoachAgent(gemini).generate_coaching(body.active_tasks, body.metrics)
+        result = CoachAgent(ai_service).generate_coaching(body.active_tasks, body.metrics)
         TelemetryService.log_execution("Coach Agent", "Generate Coaching", "success", t0, 88)
         return {"agent": "coach", "status": "success", "data": result}
     except Exception as e:
@@ -539,11 +539,11 @@ async def run_reflection(
 ):
     from agents.reflection_agent import ReflectionAgent
     from services.telemetry_service import TelemetryService
-    gemini = request.app.state.gemini_service
+    ai_service = request.app.state.gemini_service
     _set("reflection", "running")
     try:
         t0 = time.time()
-        result = ReflectionAgent(gemini).generate_reflection(body.tasks, body.twin_simulation)
+        result = ReflectionAgent(ai_service).generate_reflection(body.tasks, body.twin_simulation)
         TelemetryService.log_execution("Reflection Agent", "Generate Reflection", "success", t0, 85)
         return {"agent": "reflection", "status": "success", "data": result}
     except Exception as e:

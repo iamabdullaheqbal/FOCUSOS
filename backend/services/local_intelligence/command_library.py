@@ -7,8 +7,23 @@ class CommandLibrary:
     
     COMMANDS = [
         {
+            "intent": "meeting_scheduling",
+            "keywords": [
+                "schedule a meeting", "schedule me a meeting", "set up a meeting",
+                "book a meeting", "arrange a meeting", "schedule meeting with",
+                "add meeting", "create meeting", "set a meeting", "meeting with",
+                "schedule an appointment", "book an appointment"
+            ],
+            "agent": "MeetingScheduler",
+            "required_entities": [],
+            "optional_entities": ["target_name", "target_date", "duration"],
+            "minimum_confidence": 70,
+            "execution_strategy": "synchronous",
+            "description": "Schedules a meeting or appointment and saves it to the calendar."
+        },
+        {
             "intent": "planning",
-            "keywords": ["plan my week", "generate weekly plan", "schedule my tasks", "plan my day", "open planner"],
+            "keywords": ["plan my week", "generate weekly plan", "schedule my tasks", "plan my day", "open planner", "plan tasks for today"],
             "agent": "PlanningAgent",
             "required_entities": [],
             "optional_entities": ["target_date"],
