@@ -9,8 +9,8 @@ from database.db import db
 import json
 
 class AccountabilityAgent:
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
 
     def _get_schema(self) -> dict:
         return {
@@ -39,7 +39,7 @@ class AccountabilityAgent:
         Generate a brutal but fair accountability report. Calculate metrics out of 100.
         """
         
-        response_data = self.gemini.generate_structured(prompt, self._get_schema())
+        response_data = self.ai_service.generate_structured(prompt, self._get_schema())
         
         # Save to DB
         try:

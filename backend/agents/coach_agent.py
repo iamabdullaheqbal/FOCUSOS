@@ -9,8 +9,8 @@ from database.db import db
 import json
 
 class CoachAgent:
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
 
     def _get_schema(self) -> dict:
         return {
@@ -37,7 +37,7 @@ class CoachAgent:
         Act as an elite personal productivity coach. Be motivating but demanding.
         """
         
-        response_data = self.gemini.generate_structured(prompt, self._get_schema())
+        response_data = self.ai_service.generate_structured(prompt, self._get_schema())
         
         try:
             from models.intelligence import CoachReport

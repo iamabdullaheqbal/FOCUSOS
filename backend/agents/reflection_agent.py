@@ -9,8 +9,8 @@ from database.db import db
 import json
 
 class ReflectionAgent:
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
 
     def _get_schema(self) -> dict:
         return {
@@ -36,7 +36,7 @@ class ReflectionAgent:
         Write a concise, high-impact daily reflection report for the user. Focus on what they achieved, what they missed, and what tomorrow demands based on the Twin's simulation.
         """
         
-        response_data = self.gemini.generate_structured(prompt, self._get_schema())
+        response_data = self.ai_service.generate_structured(prompt, self._get_schema())
         
         try:
             from models.intelligence import ReflectionReport

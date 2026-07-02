@@ -17,7 +17,7 @@ from PIL import Image
 from typing import Dict, Any
 
 from services.ocr.tesseract_provider import TesseractProvider
-from services.ocr.gemini_provider import GeminiProvider
+from services.ocr.vision_provider import VisionProvider
 
 try:
     import pillow_heif
@@ -88,16 +88,16 @@ VISION_SCHEMA = {
 class VisionAgent:
     """Agent responsible for multimodal task extraction from images."""
     
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
         self.tesseract = TesseractProvider()
-        self.gemini_ocr = GeminiProvider(gemini_service, VISION_PROMPT_TEMPLATE, VISION_SCHEMA)
+        self.vision_ocr = VisionProvider(ai_service, VISION_PROMPT_TEMPLATE, VISION_SCHEMA)
         
         # Configuration
         self.conf_threshold = float(os.getenv("OCR_CONFIDENCE_THRESHOLD", "75")) / 100.0
 
     def preprocess_image(self, image_bytes: bytes) -> bytes:
-        """Resizes and normalizes image for OCR and Gemini."""
+        """Resizes and normalizes image for OCR and Mistral."""
         try:
             # Load with PIL (supports HEIC via pillow_heif)
             img = Image.open(io.BytesIO(image_bytes))
@@ -136,7 +136,7 @@ class VisionAgent:
             # 5. Adaptive Thresholding
             thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
             
-            # Convert back to bytes for Tesseract / Gemini
+            # Convert back to bytes for Tesseract / Mistral
             success, encoded_img = cv2.imencode('.png', thresh)
             if success:
                 return encoded_img.tobytes()
@@ -154,18 +154,18 @@ class VisionAgent:
         return cv2.Laplacian(cv_image, cv2.CV_64F).var()
 
     def extract_tasks_via_ocr(self, image_bytes: bytes) -> tuple[Dict[str, Any], float]:
-        """Runs local OCR and regex extraction with intelligent Gemini fallback."""
+        """Runs local OCR and regex extraction with intelligent Mistral fallback."""
         try:
             # Reconstruct cv_image from preprocessed bytes for density / blur checks
             np_arr = np.frombuffer(image_bytes, np.uint8)
             cv_image = cv2.imdecode(np_arr, cv2.IMREAD_GRAYSCALE)
             
             if cv_image is None or not self.tesseract.is_available:
-                logger.info("Tesseract unavailable or image corrupted. Using Gemini Fallback.")
-                gemini_res = self.extract_tasks_from_image(image_bytes, "image/png")
+                logger.info("Tesseract unavailable or image corrupted. Using Mistral fallback.")
+                vision_res = self.extract_tasks_from_image(image_bytes, "image/png")
                 return {
-                    "raw_text": gemini_res.get("summary", "Extracted via Gemini Vision"),
-                    "parsed_preview": gemini_res
+                    "raw_text": vision_res.get("summary", "Extracted via Mistral Vision"),
+                    "parsed_preview": vision_res
                 }, 1.0
 
             blur_score = self._calculate_blur_score(cv_image)
@@ -189,12 +189,12 @@ class VisionAgent:
                 is_reliable = False
                 
             if not is_reliable:
-                logger.info("OCR deemed unreliable (conf: %.2f, len: %d, blur: %.1f). Falling back to Gemini.", avg_conf, text_len, blur_score)
+                logger.info("OCR deemed unreliable (conf: %.2f, len: %d, blur: %.1f). Falling back to Mistral.", avg_conf, text_len, blur_score)
                 # Fallback transparently inside this method so routes remain unchanged
-                gemini_res = self.extract_tasks_from_image(image_bytes, "image/png")
+                vision_res = self.extract_tasks_from_image(image_bytes, "image/png")
                 return {
-                    "raw_text": gemini_res.get("summary", "Extracted via Gemini Vision"),
-                    "parsed_preview": gemini_res
+                    "raw_text": vision_res.get("summary", "Extracted via Mistral Vision"),
+                    "parsed_preview": vision_res
                 }, 1.0
                 
             # Reliable: Parse structured preview
@@ -206,10 +206,10 @@ class VisionAgent:
         except Exception as e:
             logger.error("Intelligent OCR engine failed cleanly: %s", e)
             # Failsafe fallback
-            gemini_res = self.extract_tasks_from_image(image_bytes, "image/png")
+            vision_res = self.extract_tasks_from_image(image_bytes, "image/png")
             return {
-                "raw_text": gemini_res.get("summary", "Extracted via Gemini Vision"),
-                "parsed_preview": gemini_res
+                "raw_text": vision_res.get("summary", "Extracted via Mistral Vision"),
+                "parsed_preview": vision_res
             }, 1.0
 
     def parse_raw_text(self, full_text: str) -> Dict[str, Any]:
@@ -265,6 +265,6 @@ class VisionAgent:
         Analyzes an image and extracts structured tasks, deadlines, and action items.
         (Called directly by routes for pure-AI vision or internally as a fallback)
         """
-        logger.info("Vision Agent analyzing %s image (%d bytes) with Gemini", mime_type, len(image_bytes))
-        # Delegate to the Gemini Provider to fulfill abstraction
-        return self.gemini_ocr.extract_tasks_directly(image_bytes, mime_type)
+        logger.info("Vision Agent analyzing %s image (%d bytes) with Mistral", mime_type, len(image_bytes))
+        # Delegate to the Vision Provider to fulfill abstraction
+        return self.vision_ocr.extract_tasks_directly(image_bytes, mime_type)

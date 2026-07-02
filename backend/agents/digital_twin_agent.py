@@ -98,8 +98,8 @@ TWIN_SCHEMA = {
 class DigitalTwinAgent:
     """Agent responsible for predictive simulations and what-if analysis."""
     
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
 
     def simulate_scenario(self, tasks: List[Dict[str, Any]], scenario: Dict[str, Any], availability: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -127,7 +127,7 @@ class DigitalTwinAgent:
             import copy
             import datetime
             
-            planner = PlanningAgent(self.gemini)
+            planner = PlanningAgent(self.ai_service)
             
             # 1. Generate Baseline
             baseline_plan = planner.generate_plan(tasks, availability)
@@ -218,7 +218,7 @@ class DigitalTwinAgent:
                 "_system_confidence": sys_confidence
             }
             
-        def _gemini_inference():
+        def _mistral_inference():
             local_result = _local_inference()
             sys_prompt = "You are the Digital Twin Agent. Your role is ONLY to explain forecasts and suggest improvements based on the local simulation data."
             user_prompt = f"""
@@ -228,11 +228,11 @@ LOCAL SIMULATION RESULT:
 Enhance this result by keeping all scores, probabilities, and impacts EXACTLY the same. 
 Only improve the 'recommendations' and 'cascade' descriptions to be more insightful and strategic.
 """
-            return self.gemini.generate_structured(
+            return self.ai_service.generate_structured(
                 system_prompt=sys_prompt,
                 user_prompt=user_prompt,
                 schema=TWIN_SCHEMA,
                 temperature=0.4
             )
 
-        return execute_hybrid(_local_inference, _gemini_inference, threshold=85)
+        return execute_hybrid(_local_inference, _mistral_inference, threshold=85)

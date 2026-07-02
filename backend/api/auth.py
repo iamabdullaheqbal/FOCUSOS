@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -46,14 +46,14 @@ def _make_tokens(user: User) -> tuple[str, str]:
 # ── Schemas ───────────────────────────────────────────────────────────────────
 
 class RegisterIn(BaseModel):
-    email: EmailStr
+    email: str
     password: str
     full_name: str | None = None
     username: str | None = None
 
 
 class LoginIn(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 

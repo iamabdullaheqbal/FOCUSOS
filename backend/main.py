@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
     logger.info("[START] FocusOS backend starting…")
 
     # Validate required env vars
-    missing = [v for v in ("DATABASE_URL", "GEMINI_API_KEY") if not os.getenv(v)]
+    missing = [v for v in ("DATABASE_URL", "MISTRAL_API_KEY") if not os.getenv(v)]
     if missing:
         logger.warning("[ENV] Missing env vars (non-fatal): %s", ", ".join(missing))
 
@@ -56,22 +56,22 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("[DB] Tables ready.")
 
-    # Initialise Gemini service
-    if settings.GEMINI_API_KEY:
-        from services.gemini_service import GeminiService
-        app.state.gemini_service = GeminiService(
-            api_key=settings.GEMINI_API_KEY,
-            model=settings.GEMINI_MODEL,
-            vision_model=settings.GEMINI_VISION_MODEL,
-            max_retries=settings.GEMINI_MAX_RETRIES,
-            retry_delay=settings.GEMINI_RETRY_DELAY,
-            cache_ttl=settings.GEMINI_CACHE_TTL,
-            cache_maxsize=settings.GEMINI_CACHE_MAXSIZE,
+    # Initialise Mistral AI service
+    if settings.MISTRAL_API_KEY:
+        from services.mistral_service import MistralService
+        app.state.gemini_service = MistralService(
+            api_key=settings.MISTRAL_API_KEY,
+            model=settings.MISTRAL_MODEL,
+            vision_model=settings.MISTRAL_VISION_MODEL,
+            max_retries=settings.MISTRAL_MAX_RETRIES,
+            retry_delay=settings.MISTRAL_RETRY_DELAY,
+            cache_ttl=settings.MISTRAL_CACHE_TTL,
+            cache_maxsize=settings.MISTRAL_CACHE_MAXSIZE,
         )
-        logger.info("[GEMINI] GeminiService ready | model=%s", settings.GEMINI_MODEL)
+        logger.info("[MISTRAL] MistralService ready | model=%s", settings.MISTRAL_MODEL)
     else:
         app.state.gemini_service = None
-        logger.warning("[GEMINI] GEMINI_API_KEY not set — AI features disabled.")
+        logger.warning("[MISTRAL] MISTRAL_API_KEY not set — AI features disabled.")
 
     # Sentry (optional)
     sentry_dsn = os.getenv("SENTRY_DSN")
@@ -218,7 +218,7 @@ if __name__ == "__main__":
     print("=" * 50)
     print(f"  Env:      {settings.APP_ENV}")
     print(f"  Database: {settings.DATABASE_URL.split('@')[-1]}")   # hide credentials
-    print(f"  Gemini:   {'Connected' if settings.GEMINI_API_KEY else 'Disabled'}")
+    print(f"  Mistral:  {'Connected' if settings.MISTRAL_API_KEY else 'Disabled'}")
     print(f"  Docs:     http://localhost:{settings.PORT}/api/docs")
     print(f"  Server:   http://localhost:{settings.PORT}")
     print("=" * 50 + "\n")

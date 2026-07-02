@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 class RescueAgent:
     """Agent responsible for detecting deadline risks and formulating recovery strategies."""
     
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
 
     def generate_recovery_plan(self, tasks: List[Dict[str, Any]], availability: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -52,7 +52,7 @@ class RescueAgent:
             }
 
         from agents.digital_twin_agent import DigitalTwinAgent
-        twin = DigitalTwinAgent(self.gemini)
+        twin = DigitalTwinAgent(self.ai_service)
 
         def _local_inference():
             # Sort tasks by size
@@ -124,7 +124,7 @@ class RescueAgent:
                 "_system_confidence": sys_confidence
             }
             
-        def _gemini_inference():
+        def _mistral_inference():
             local_plan = _local_inference()
             
             sys_prompt = "You are the Rescue Agent. Your role is NOT to generate strategies, but to explain and coach based on the provided Local Intelligence plan."
@@ -173,12 +173,12 @@ Also update the 'reasoning' field to be more empathetic. Keep risk_detected and 
                 "required": ["risk_detected", "risk_level", "reasoning", "strategies"]
             }
             
-            return self.gemini.generate_structured(
+            return self.ai_service.generate_structured(
                 system_prompt=sys_prompt,
                 user_prompt=user_prompt,
                 schema=schema,
                 temperature=0.4
             )
             
-        return execute_hybrid(_local_inference, _gemini_inference, threshold=75)
+        return execute_hybrid(_local_inference, _mistral_inference, threshold=75)
 

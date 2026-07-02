@@ -6,12 +6,12 @@ Acts as the NLU router for the entire OS.
 """
 
 from typing import Dict, Any
-from services.gemini_service import GeminiService
+from services.ai_service import MistralService
 
 class VoiceCopilotAgent:
 
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
 
     def parse_transcript(self, transcript: str) -> Dict[str, Any]:
         prompt = f"""
@@ -59,7 +59,7 @@ class VoiceCopilotAgent:
         }
         
         try:
-            return self.gemini.generate_structured(prompt, transcript, schema)
+            return self.ai_service.generate_structured(prompt, transcript, schema)
         except Exception as e:
             import logging
             logging.error(f"VoiceCopilotAgent Error: {e}")

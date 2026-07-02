@@ -100,8 +100,8 @@ PLANNING_SCHEMA = {
 class PlanningAgent:
     """Agent responsible for transforming prioritized tasks into daily schedules."""
     
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
 
     def generate_plan(self, tasks: List[Dict[str, Any]], availability: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -115,14 +115,14 @@ class PlanningAgent:
                 "_inference_source": "local"
             }
 
-        def _gemini_inference():
+        def _mistral_inference():
             user_prompt = PLANNING_USER_PROMPT_TEMPLATE.format(
                 tasks_json=json.dumps(tasks, indent=2),
                 availability_json=json.dumps(availability, indent=2)
             )
             
-            logger.info("Planning Agent (Gemini) generating schedule for %d tasks", len(tasks))
-            return self.gemini.generate_structured(
+            logger.info("Planning Agent (Mistral) generating schedule for %d tasks", len(tasks))
+            return self.ai_service.generate_structured(
                 system_prompt=PLANNING_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
                 schema=PLANNING_SCHEMA,
@@ -334,4 +334,4 @@ class PlanningAgent:
                 "backlog": backlog
             }
 
-        return execute_hybrid(_local_inference, _gemini_inference, threshold=75)
+        return execute_hybrid(_local_inference, _mistral_inference, threshold=75)

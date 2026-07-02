@@ -51,14 +51,14 @@ PRIORITY_SCHEMA = {
 class PriorityAgent:
     """Agent responsible for analyzing tasks and calculating priority metrics."""
     
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
 
     def analyze_task(self, task_data: Dict[str, Any], active_tasks_count: int = 0) -> Dict[str, Any]:
         """
         Analyzes task urgency, importance, risk, and priority score using Hybrid Inference.
         """
-        def _gemini_inference():
+        def _mistral_inference():
             title = task_data.get("title", "Untitled Task")
             description = task_data.get("description", "No description provided")
             deadline = task_data.get("deadline", "No deadline")
@@ -75,8 +75,8 @@ class PriorityAgent:
                 active_tasks_count=active_tasks_count
             )
             
-            logger.info("Priority Agent (Gemini) analyzing task: %s", title)
-            return self.gemini.generate_structured(
+            logger.info("Priority Agent (Mistral) analyzing task: %s", title)
+            return self.ai_service.generate_structured(
                 system_prompt=PRIORITY_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
                 schema=PRIORITY_SCHEMA,
@@ -157,4 +157,4 @@ class PriorityAgent:
                 "_system_confidence": confidence
             }
 
-        return execute_hybrid(_local_inference, _gemini_inference, threshold=80)
+        return execute_hybrid(_local_inference, _mistral_inference, threshold=80)

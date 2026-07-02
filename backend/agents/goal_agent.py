@@ -5,7 +5,7 @@ Analyzes long-term goals and generates milestones, blockers, and forecasts.
 """
 
 from typing import Dict, Any, List
-from services.gemini_service import GeminiService
+from services.ai_service import MistralService
 from models.goal import Goal, Habit
 from agents.hybrid_inference import execute_hybrid
 import json
@@ -15,13 +15,13 @@ logger = logging.getLogger(__name__)
 
 class GoalAgent:
     
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
 
     def analyze_goal(self, title: str, description: str) -> Dict[str, Any]:
         """Analyzes a new or existing goal using Hybrid Inference."""
         
-        def _gemini_inference():
+        def _mistral_inference():
             prompt = f"""
             You are the Goal Agent for an AI Productivity Operating System.
             Analyze the following goal:
@@ -56,8 +56,8 @@ class GoalAgent:
                 },
                 "required": ["goal_health", "completion_probability", "milestones", "blockers", "recommendations"]
             }
-            logger.info("Goal Agent (Gemini) analyzing goal '%s'", title)
-            return self.gemini.generate_structured(prompt, f"{title} {description}", schema)
+            logger.info("Goal Agent (Mistral) analyzing goal '%s'", title)
+            return self.ai_service.generate_structured(prompt, f"{title} {description}", schema)
 
         def _local_inference():
             title_lower = title.lower()
@@ -105,4 +105,4 @@ class GoalAgent:
                 "_system_confidence": confidence
             }
 
-        return execute_hybrid(_local_inference, _gemini_inference, threshold=75)
+        return execute_hybrid(_local_inference, _mistral_inference, threshold=75)

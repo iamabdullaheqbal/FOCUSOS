@@ -7,15 +7,15 @@ Includes Vector-Ready architecture, Semantic Chunking, and Document Metadata.
 
 import uuid
 from typing import Dict, Any, List
-from services.gemini_service import GeminiService
+from services.ai_service import MistralService
 import logging
 
 logger = logging.getLogger(__name__)
 
 class DocumentIntelligenceAgent:
 
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
 
     def _semantic_chunking(self, text: str, chunk_size: int = 3000, overlap: int = 200) -> List[Dict[str, Any]]:
         """
@@ -47,7 +47,7 @@ class DocumentIntelligenceAgent:
         """
         Stub for an embedding interface so a vector database can be plugged in later.
         """
-        # Example: return self.gemini.embed(text)
+        # Example: return self.ai_service.embed(text)
         return []
 
     def parse_document(self, text: str, filename: str = "Unknown") -> Dict[str, Any]:
@@ -111,7 +111,7 @@ class DocumentIntelligenceAgent:
         }
         
         try:
-            result = self.gemini.generate_structured(prompt, primary_text, schema)
+            result = self.ai_service.generate_structured(prompt, primary_text, schema)
             
             # 3. Augment result with Vector-Ready Metadata
             result["metadata"] = {

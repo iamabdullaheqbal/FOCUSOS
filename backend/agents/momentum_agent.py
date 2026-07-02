@@ -16,8 +16,8 @@ def _sync_session():
 
 
 class MomentumAgent:
-    def __init__(self, gemini_service):
-        self.gemini = gemini_service
+    def __init__(self, ai_service):
+        self.ai_service = ai_service
 
     def analyze_momentum(self) -> dict:
         from models.task import Task
@@ -60,7 +60,7 @@ class MomentumAgent:
         from models.intelligence import WeeklyReview
         profile = self.analyze_momentum()
         try:
-            res = self.gemini.generate_structured(
+            res = self.ai_service.generate_structured(
                 f"You are the FocusOS System Intelligence. Analyze this execution profile and provide a short 2-sentence weekly review. Profile: {profile}.",
                 {"type": "object", "properties": {"feedback": {"type": "string"}}},
             )
