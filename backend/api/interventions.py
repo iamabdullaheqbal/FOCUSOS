@@ -34,13 +34,13 @@ async def get_threats(
 ):
     return {
         "status": "success",
-        "data": InterventionEngine.get_active_threats(page=page, limit=limit),
+        "data": InterventionEngine.get_active_threats(user_id=user_id, page=page, limit=limit),
     }
 
 
 @router.post("/scan")
 async def scan(user_id: str = Depends(get_current_user_id)):
-    results = InterventionEngine.run_engine()
+    results = InterventionEngine.run_engine(user_id=user_id)
     return {
         "status": "success",
         "message": f"Engine completed sweep. Found {len(results)} active interventions.",

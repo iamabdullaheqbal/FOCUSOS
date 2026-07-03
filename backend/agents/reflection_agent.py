@@ -5,7 +5,6 @@ Generates daily reflections summarizing achievements and missed opportunities.
 """
 
 from typing import Dict, Any, List
-from database.db import db
 import json
 
 class ReflectionAgent:
@@ -27,16 +26,16 @@ class ReflectionAgent:
 
     def generate_reflection(self, tasks: List[Dict], twin_simulation: Dict) -> Dict[str, Any]:
         """Provides an end-of-day reflection."""
-        prompt = f"""
-        You are the DeadlineOS Reflection Agent.
-        
-        Current Tasks & Workload: {json.dumps(tasks)}
-        Future Simulation Outcomes (Digital Twin): {json.dumps(twin_simulation)}
-        
-        Write a concise, high-impact daily reflection report for the user. Focus on what they achieved, what they missed, and what tomorrow demands based on the Twin's simulation.
-        """
-        
-        response_data = self.ai_service.generate_structured(prompt, self._get_schema())
+        system_prompt = "You are the DeadlineOS Reflection Agent. Write a concise, high-impact daily reflection report. Focus on what was achieved, what was missed, and what tomorrow demands."
+        user_prompt = f"""
+Current Tasks & Workload: {json.dumps(tasks)}
+Future Simulation Outcomes (Digital Twin): {json.dumps(twin_simulation)}
+"""
+        response_data = self.ai_service.generate_structured(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            schema=self._get_schema(),
+        )
         
         try:
             from models.intelligence import ReflectionReport

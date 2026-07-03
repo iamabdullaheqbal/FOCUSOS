@@ -23,7 +23,7 @@ export const AboutSettings: React.FC = () => {
           </div>
           <div className="flex items-center justify-between py-2 border-b border-slate-800/50">
             <span className="text-sm font-medium text-slate-400">AI Engine</span>
-            <span className="text-sm text-indigo-400 font-mono">Gemini 2.0 Flash</span>
+            <span className="text-sm text-indigo-400 font-mono">Mistral Large</span>
           </div>
           <div className="flex items-center justify-between py-2">
             <span className="text-sm font-medium text-slate-400">License</span>

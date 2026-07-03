@@ -1,7 +1,7 @@
 """
-DeadlineOS — Priority Agent
-=============================
-Analyzes tasks using Gemini to determine urgency, importance, 
+FocusOS — Priority Agent
+=========================
+Analyzes tasks using Mistral AI to determine urgency, importance,
 estimated effort, risk of delay, and a priority score.
 """
 

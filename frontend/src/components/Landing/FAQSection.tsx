@@ -10,8 +10,8 @@ const faqs = [
     answer: "Yes. FocusOS uses a Local-First architecture. Your core intelligence engine and personal data run securely on your device and your dedicated Neon PostgreSQL instance. We do not sell your data."
   },
   {
-    question: "When does it use Google Gemini?",
-    answer: "Gemini is used as an enhancement layer for complex semantic reasoning (like breaking down massive goals or generating complex rescue plans). The local engine decides when to securely request Gemini's assistance."
+    question: "When does it use Mistral AI?",
+    answer: "Mistral AI is used as an enhancement layer for complex semantic reasoning (like breaking down massive goals or generating complex rescue plans). The local engine decides when to securely request Mistral's assistance."
   },
   {
     question: "How is it different from Todoist or Notion?",

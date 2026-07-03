@@ -322,7 +322,7 @@ class PlanningAgent:
                     "type": "warning"
                 })
                 if sys_confidence > 70:
-                    sys_confidence = 70 # Encourage Gemini fallback if desired, but we keep local active
+                    sys_confidence = 70  # Encourage Mistral fallback if desired, but keep local active
 
             return {
                 "schedule": schedule,

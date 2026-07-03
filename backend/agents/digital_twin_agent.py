@@ -163,7 +163,7 @@ class DigitalTwinAgent:
                 hrs = float(cloned_availability.get("daily_available_hours", 8))
                 cloned_availability["daily_available_hours"] = max(1.0, hrs - float(scenario.get("hours", 2)))
             else:
-                sys_confidence = 50 # Semantic scenario, fallback to Gemini
+                sys_confidence = 50  # Semantic scenario — falls back to Mistral
                 
             # 4. Generate Simulated Schedule
             projected_plan = planner.generate_plan(cloned_tasks, cloned_availability)

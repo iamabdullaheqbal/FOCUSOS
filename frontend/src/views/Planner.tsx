@@ -339,7 +339,7 @@ export const Planner: React.FC = () => {
                 </p>
                 <div className="flex flex-wrap justify-center gap-4 text-xs font-bold uppercase tracking-widest">
                   <span className="flex items-center gap-2 text-emerald-400"><CheckCircle2 className="w-4 h-4"/> Local Engine Ready</span>
-                  <span className="flex items-center gap-2 text-fuchsia-400"><Server className="w-4 h-4"/> Gemini Fallback</span>
+                  <span className="flex items-center gap-2 text-fuchsia-400"><Server className="w-4 h-4"/> Mistral Fallback</span>
                 </div>
               </div>
             </GlassCard>
@@ -456,8 +456,8 @@ export const Planner: React.FC = () => {
             <div className="space-y-3">
               <div className="flex justify-between items-center pb-2 border-b border-white/10">
                 <span className="text-xs font-bold text-gray-400 uppercase">Execution Mode</span>
-                <Badge variant={generatedBy === "LOCAL_FALLBACK_RECOVERY" ? "danger" : generatedBy === "gemini" ? "warning" : "success"}>
-                  {generatedBy === "LOCAL_FALLBACK_RECOVERY" ? "Local Recovery" : generatedBy === "gemini" ? "Gemini" : "Local"}
+                <Badge variant={generatedBy === "LOCAL_FALLBACK_RECOVERY" ? "danger" : generatedBy === "mistral" ? "warning" : "success"}>
+                  {generatedBy === "LOCAL_FALLBACK_RECOVERY" ? "Local Recovery" : generatedBy === "mistral" ? "mistral" : "Local"}
                 </Badge>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-white/10">
@@ -466,7 +466,7 @@ export const Planner: React.FC = () => {
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-white/10">
                 <span className="text-xs font-bold text-gray-400 uppercase">Fallback Used</span>
-                <span className="text-sm font-bold text-gray-300">{efficiency < 75 || generatedBy === "gemini" ? "Yes" : "No"}</span>
+                <span className="text-sm font-bold text-gray-300">{efficiency < 75 || generatedBy === "mistral" ? "Yes" : "No"}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold text-gray-400 uppercase">Generated At</span>

@@ -6,7 +6,7 @@ import { CheckCircle2, ListTodo, BrainCircuit, Target, Activity, ShieldAlert, He
 
 const reasons = [
   "Offline-first intelligence guarantees privacy.",
-  "Deterministic local AI with Gemini fallback.",
+  "Deterministic local AI with Mistral AI fallback.",
   "Autonomous planning reduces cognitive load.",
   "Predictive simulation prevents burnout.",
   "Recovery intelligence saves failing momentum.",

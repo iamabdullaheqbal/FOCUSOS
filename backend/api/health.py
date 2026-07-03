@@ -34,7 +34,7 @@ async def health_db():
 
 @router.get("/ai")
 async def health_ai(request: Request):
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     if not ai_service:
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=503, content={"status": "error", "message": "AI service not initialised"})

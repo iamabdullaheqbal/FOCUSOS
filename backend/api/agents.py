@@ -122,7 +122,7 @@ async def run_priority_agent(
     db: AsyncSession = Depends(get_db),
 ):
     from agents.priority_agent import PriorityAgent
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     if not ai_service:
         raise HTTPException(status_code=503, detail="AI service not available")
 
@@ -196,7 +196,7 @@ async def run_planning_agent(
     from services.telemetry_service import TelemetryService
     from services.intervention_engine import InterventionEngine
 
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     if not ai_service:
         raise HTTPException(status_code=503, detail="AI service not available")
 
@@ -272,7 +272,7 @@ async def run_rescue_agent(
     from agents.rescue_agent import RescueAgent
     from services.telemetry_service import TelemetryService
 
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     if not ai_service:
         raise HTTPException(status_code=503, detail="AI service not available")
 
@@ -338,7 +338,7 @@ async def run_digital_twin(
     from services.availability_service import AvailabilityService
     from services.telemetry_service import TelemetryService
 
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     if not ai_service:
         raise HTTPException(status_code=503, detail="AI service not available")
     if not body.scenario:
@@ -389,7 +389,7 @@ async def run_vision_agent(
     from agents.vision_agent import VisionAgent
     from services.telemetry_service import TelemetryService
 
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     if not ai_service:
         raise HTTPException(status_code=503, detail="AI service not available")
     if image.content_type not in ALLOWED_IMAGE_MIMES:
@@ -407,11 +407,11 @@ async def run_vision_agent(
 
         from services.local_intelligence.execution_engine import ExecutionEngine
         if ocr_conf < 0.2 and not raw_text.strip():
-            gemini_res = agent.extract_tasks_from_image(raw_bytes, image.content_type)
-            raw_text = gemini_res.get("summary", "")
+            mistral_res = agent.extract_tasks_from_image(raw_bytes, image.content_type)
+            raw_text = mistral_res.get("summary", "")
 
         execution = ExecutionEngine.execute(
-            source="vision", transcript=raw_text, gemini_service=ai_service, user_id=user_id
+            source="vision", transcript=raw_text, ai_service=ai_service, user_id=user_id
         )
         TelemetryService.log_execution("Vision Agent", "OCR & Execution", "success", t0, int(ocr_conf * 100))
         _set("vision", "done")
@@ -493,7 +493,7 @@ async def run_accountability(
 ):
     from agents.accountability_agent import AccountabilityAgent
     from services.telemetry_service import TelemetryService
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     _set("accountability", "running")
     try:
         t0 = time.time()
@@ -516,7 +516,7 @@ async def run_coach(
 ):
     from agents.coach_agent import CoachAgent
     from services.telemetry_service import TelemetryService
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     _set("coach", "running")
     try:
         t0 = time.time()
@@ -539,7 +539,7 @@ async def run_reflection(
 ):
     from agents.reflection_agent import ReflectionAgent
     from services.telemetry_service import TelemetryService
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     _set("reflection", "running")
     try:
         t0 = time.time()

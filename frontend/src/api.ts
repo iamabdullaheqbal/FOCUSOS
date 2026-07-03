@@ -33,12 +33,34 @@ apiClient.interceptors.request.use(async (config) => {
   return config;
 });
 
+// ── Circuit breaker: suppress duplicate "backend offline" toasts ──────────────
+// Once a network error fires we mark the backend as offline and stop emitting
+// the toast on every subsequent request.  When a successful response arrives
+// we flip the flag back and optionally notify the UI that the backend is back.
+let _backendOffline = false;
+
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Backend responded — if it was marked offline, announce recovery once.
+    if (_backendOffline) {
+      _backendOffline = false;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('deadline_api_error', {
+          detail: 'Backend reconnected. System is back online.',
+        }));
+      }
+    }
+    return response;
+  },
   (error) => {
+    const isNetworkError =
+      error.code === 'ERR_NETWORK' ||
+      error.message === 'Network Error' ||
+      error.code === 'ECONNABORTED';
+
     let errorMessage = 'Something went wrong. Please try again.';
 
-    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error' || error.code === 'ECONNABORTED') {
+    if (isNetworkError) {
       errorMessage = 'Unable to connect to the backend. Is the server running?';
     } else if (error.response) {
       const status = error.response.status;
@@ -55,13 +77,30 @@ apiClient.interceptors.response.use(
 
     console.debug('[API Error Internal]:', error);
 
-    // In dev guest mode the backend isn't running — suppress the global toast
-    // so the UI doesn't get spammed. Each page handles its own empty state.
-    const isDevGuest = process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && localStorage.getItem('dev_bypass_auth') === 'true';
+    // Suppress toasts when:
+    // 1. Dev guest mode (backend intentionally not running)
+    // 2. Network error already shown — circuit breaker prevents spam
+    const isDevGuest =
+      process.env.NODE_ENV === 'development' &&
+      typeof window !== 'undefined' &&
+      localStorage.getItem('dev_bypass_auth') === 'true';
+
     if (!isDevGuest) {
-      window.dispatchEvent(new CustomEvent('deadline_api_error', {
-        detail: errorMessage
-      }));
+      if (isNetworkError) {
+        // Only show the "offline" toast the first time
+        if (!_backendOffline) {
+          _backendOffline = true;
+          window.dispatchEvent(new CustomEvent('deadline_api_error', {
+            detail: errorMessage,
+          }));
+        }
+        // Subsequent network errors are silently swallowed
+      } else {
+        // Non-network errors (4xx, 5xx) always show
+        window.dispatchEvent(new CustomEvent('deadline_api_error', {
+          detail: errorMessage,
+        }));
+      }
     }
 
     const sanitizedError = new Error(errorMessage);
@@ -156,7 +195,7 @@ export const FocusOSApi = {
     formData.append('image', file);
     const response = await apiClient.post('/agents/vision', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 60000  // 60s — vision OCR + Gemini can be slow
+      timeout: 60000  // 60s — vision OCR + Mistral can be slow
     });
     return response.data;
   },
@@ -392,7 +431,7 @@ export const FocusOSApi = {
     formData.append('file', file);
     const response = await apiClient.post('/documents/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 60000  // 60s — Gemini analysis can be slow
+      timeout: 60000  // 60s — Mistral analysis can be slow
     });
     return response.data;
   },

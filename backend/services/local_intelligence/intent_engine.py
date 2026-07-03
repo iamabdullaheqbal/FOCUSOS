@@ -24,7 +24,7 @@ class IntentEngine:
                 "intent": "unknown",
                 "entities": {},
                 "confidence": 0.0,
-                "agent": "Gemini",
+                "agent": "Mistral",
                 "normalized_transcript": normalized
             }
             
@@ -45,6 +45,6 @@ class IntentEngine:
             "intent": intent,
             "entities": entities,
             "confidence": confidence,
-            "agent": matched_cmd["agent"] if intent != "unknown" else "Gemini",
+            "agent": matched_cmd["agent"] if intent != "unknown" else "Mistral",
             "normalized_transcript": normalized
         }

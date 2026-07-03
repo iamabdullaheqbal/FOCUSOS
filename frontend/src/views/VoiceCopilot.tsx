@@ -55,7 +55,8 @@ export const VoiceCopilot: React.FC = () => {
   const [analytics, setAnalytics] = useState<any>(null);
   const [speechError, setSpeechError] = useState<string | null>(null);
   const [speechSupported, setSpeechSupported] = useState(true);
-  
+  const networkRetryRef = useRef(0);   // tracks how many times we've auto-retried a 'network' error
+
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -130,13 +131,36 @@ export const VoiceCopilot: React.FC = () => {
       setIsListening(false);
       recognitionRef.current = null;
       if (event.error === 'network') {
-        setSpeechError('Voice input unavailable on this connection. Type your command in the box below.');
+        // Auto-retry once — Chrome sometimes fires a spurious network error on the first start
+        if (networkRetryRef.current < 1) {
+          networkRetryRef.current += 1;
+          setTimeout(() => {
+            const retryRecognition = createRecognition();
+            if (!retryRecognition) return;
+            recognitionRef.current = retryRecognition;
+            try {
+              retryRecognition.start();
+              setIsListening(true);
+            } catch {
+              recognitionRef.current = null;
+              setSpeechError(
+                'Microphone could not start. Check browser permissions and try again.'
+              );
+            }
+          }, 300);
+          return;
+        }
+        networkRetryRef.current = 0;
+        setSpeechError(
+          'Browser speech recognition requires an internet connection to Google\'s servers. ' +
+          'You can still type your command in the box below.'
+        );
       } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
         setSpeechError('Microphone access denied. Allow microphone access in browser settings, or type your command below.');
       } else if (event.error === 'no-speech') {
-        setSpeechError(null);
+        setSpeechError(null); // no-speech is not really an error — just silence
       } else {
-        setSpeechError(`Recognition unavailable (${event.error}). You can still type commands below.`);
+        setSpeechError(`Speech recognition error (${event.error}). You can still type commands below.`);
       }
     };
 
@@ -150,6 +174,7 @@ export const VoiceCopilot: React.FC = () => {
       setIsListening(false);
     } else {
       setSpeechError(null);
+      networkRetryRef.current = 0;   // reset retry count on every manual press
       if (!transcript) setResult(null);
       // Always create a fresh instance — SpeechRecognition can't be restarted
       const recognition = createRecognition();

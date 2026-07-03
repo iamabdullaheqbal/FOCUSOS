@@ -90,7 +90,7 @@ def goal_service_executor(entities: Dict, context: Dict) -> Dict:
         uid, goal_title,
         f"Created via {context.get('source', 'local intelligence')}.",
         "General", entities.get("target_date"),
-        gemini_service=context.get("ai_service"),
+        ai_service=context.get("ai_service"),
     )
     OrchestratorService.add_event("Local Intelligence", "Created Goal", "success",
                                   {"goal_id": res.get("id")}, uid)

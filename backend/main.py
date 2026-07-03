@@ -11,7 +11,12 @@ Or directly:
 import logging
 import sys
 import os
+import zoneinfo
 from contextlib import asynccontextmanager
+
+# ── Timezone: Pakistan Standard Time (UTC+5) ──────────────────────────────────
+PKT = zoneinfo.ZoneInfo("Asia/Karachi")
+os.environ.setdefault("TZ", "Asia/Karachi")
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,7 +64,7 @@ async def lifespan(app: FastAPI):
     # Initialise Mistral AI service
     if settings.MISTRAL_API_KEY:
         from services.mistral_service import MistralService
-        app.state.gemini_service = MistralService(
+        app.state.ai_service = MistralService(
             api_key=settings.MISTRAL_API_KEY,
             model=settings.MISTRAL_MODEL,
             vision_model=settings.MISTRAL_VISION_MODEL,
@@ -70,7 +75,7 @@ async def lifespan(app: FastAPI):
         )
         logger.info("[MISTRAL] MistralService ready | model=%s", settings.MISTRAL_MODEL)
     else:
-        app.state.gemini_service = None
+        app.state.ai_service = None
         logger.warning("[MISTRAL] MISTRAL_API_KEY not set — AI features disabled.")
 
     # Sentry (optional)
@@ -81,7 +86,7 @@ async def lifespan(app: FastAPI):
         sentry_sdk.init(dsn=sentry_dsn, integrations=[FastApiIntegration()], traces_sample_rate=1.0)
         logger.info("[SENTRY] Sentry initialised.")
 
-    logger.info("[OK] FocusOS backend ready on port %d", settings.PORT)
+    logger.info("[OK] FocusOS backend ready on port %d (timezone: Asia/Karachi / UTC+5)", settings.PORT)
 
     yield  # ← app is running
 
@@ -217,6 +222,7 @@ if __name__ == "__main__":
     print("  FOCUSOS BACKEND")
     print("=" * 50)
     print(f"  Env:      {settings.APP_ENV}")
+    print(f"  Timezone: Asia/Karachi (UTC+5 / PKT)")
     print(f"  Database: {settings.DATABASE_URL.split('@')[-1]}")   # hide credentials
     print(f"  Mistral:  {'Connected' if settings.MISTRAL_API_KEY else 'Disabled'}")
     print(f"  Docs:     http://localhost:{settings.PORT}/api/docs")

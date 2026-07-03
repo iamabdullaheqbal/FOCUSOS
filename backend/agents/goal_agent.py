@@ -22,42 +22,36 @@ class GoalAgent:
         """Analyzes a new or existing goal using Hybrid Inference."""
         
         def _mistral_inference():
-            prompt = f"""
-            You are the Goal Agent for an AI Productivity Operating System.
-            Analyze the following goal:
-            Title: {title}
-            Description: {description}
+            system_prompt = "You are the Goal Agent for an AI Productivity Operating System. Analyze goals and generate structured milestone plans."
+            user_prompt = f"""
+Analyze the following goal:
+Title: {title}
+Description: {description}
 
-            Generate a structured response with:
-            1. goal_health (String: "Excellent", "Good", "At Risk", "Critical")
-            2. completion_probability (Integer 0-100)
-            3. milestones (Array of Strings: 3-5 logical checkpoints)
-            4. blockers (Array of Strings: potential risks)
-            5. recommendations (Array of Strings: actionable advice)
-            """
-            
+Generate a structured response with:
+1. goal_health (String: "Excellent", "Good", "At Risk", "Critical")
+2. completion_probability (Integer 0-100)
+3. milestones (Array of Strings: 3-5 logical checkpoints)
+4. blockers (Array of Strings: potential risks)
+5. recommendations (Array of Strings: actionable advice)
+"""
             schema = {
-                "type": "OBJECT",
+                "type": "object",
                 "properties": {
-                    "goal_health": {"type": "STRING"},
-                    "completion_probability": {"type": "INTEGER"},
-                    "milestones": {
-                        "type": "ARRAY",
-                        "items": {"type": "STRING"}
-                    },
-                    "blockers": {
-                        "type": "ARRAY",
-                        "items": {"type": "STRING"}
-                    },
-                    "recommendations": {
-                        "type": "ARRAY",
-                        "items": {"type": "STRING"}
-                    }
+                    "goal_health": {"type": "string"},
+                    "completion_probability": {"type": "integer"},
+                    "milestones": {"type": "array", "items": {"type": "string"}},
+                    "blockers": {"type": "array", "items": {"type": "string"}},
+                    "recommendations": {"type": "array", "items": {"type": "string"}},
                 },
                 "required": ["goal_health", "completion_probability", "milestones", "blockers", "recommendations"]
             }
             logger.info("Goal Agent (Mistral) analyzing goal '%s'", title)
-            return self.ai_service.generate_structured(prompt, f"{title} {description}", schema)
+            return self.ai_service.generate_structured(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                schema=schema,
+            )
 
         def _local_inference():
             title_lower = title.lower()

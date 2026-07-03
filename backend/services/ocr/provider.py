@@ -11,7 +11,7 @@ class OCRProvider(ABC):
         Extract text from an image.
         
         Args:
-            image_bytes: Raw bytes of the image (often used by Gemini).
+            image_bytes: Raw bytes of the image (often used by Mistral).
             cv_image: Preprocessed OpenCV image (numpy array, often used by Tesseract).
             
         Returns:
@@ -23,6 +23,6 @@ class OCRProvider(ABC):
     def extract_tasks_directly(self, image_bytes: bytes, mime_type: str) -> Dict[str, Any]:
         """
         Directly extract structured tasks, deadlines, and summaries.
-        (Usually only implemented fully by GeminiProvider).
+        (Usually only implemented fully by MistralProvider).
         """
         pass

@@ -5,7 +5,6 @@ Acts as a personal productivity coach based on accountability metrics and tasks.
 """
 
 from typing import Dict, Any, List
-from database.db import db
 import json
 
 class CoachAgent:
@@ -28,16 +27,16 @@ class CoachAgent:
 
     def generate_coaching(self, active_tasks: List[Dict], metrics: Dict) -> Dict[str, Any]:
         """Provides coaching insights based on metrics and current workload."""
-        prompt = f"""
-        You are the DeadlineOS Coach Agent. Review the user's workload and accountability metrics.
-        
-        Active Workload: {json.dumps(active_tasks)}
-        Accountability Metrics: {json.dumps(metrics)}
-        
-        Act as an elite personal productivity coach. Be motivating but demanding.
-        """
-        
-        response_data = self.ai_service.generate_structured(prompt, self._get_schema())
+        system_prompt = "You are the DeadlineOS Coach Agent. Act as an elite personal productivity coach. Be motivating but demanding."
+        user_prompt = f"""
+Active Workload: {json.dumps(active_tasks)}
+Accountability Metrics: {json.dumps(metrics)}
+"""
+        response_data = self.ai_service.generate_structured(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            schema=self._get_schema(),
+        )
         
         try:
             from models.intelligence import CoachReport

@@ -28,22 +28,22 @@ export const AISettings: React.FC = () => {
         <SettingsCard className="space-y-4">
           <Select 
             label="Primary Model" 
-            value={ai.primary_model || 'gemini-2.0-flash'} 
+            value={ai.primary_model || 'mistral-large-latest'} 
             onChange={(val) => handleUpdate('primary_model', val)}
             options={[
-              { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Fast)' },
-              { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro (Deep Reasoning)' },
+              { value: 'mistral-large-latest', label: 'Mistral Large (Fast)' },
+              { value: 'mistral-large-latest', label: 'Mistral Large (Deep Reasoning)' },
               { value: 'local-llama-3', label: 'Local Llama 3 (Offline)' }
             ]}
           />
           <div className="h-px bg-slate-800 my-2" />
           <Select 
             label="Fallback Model" 
-            value={ai.fallback_model || 'gemini-1.5-pro'} 
+            value={ai.fallback_model || 'mistral-large-latest'} 
             onChange={(val) => handleUpdate('fallback_model', val)}
             options={[
-              { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-              { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+              { value: 'mistral-large-latest', label: 'Mistral Large' },
+              { value: 'mistral-large-latest', label: 'Mistral Large' },
               { value: 'none', label: 'No Fallback (Fail Fast)' }
             ]}
           />

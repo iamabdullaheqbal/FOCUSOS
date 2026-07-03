@@ -2,7 +2,7 @@
 FocusOS — Configuration
 ========================
 All settings loaded from environment variables.
-Local PostgreSQL — no Neon, no Supabase, no Gemini.
+Local PostgreSQL — no Neon, no Supabase. AI powered by Mistral AI.
 """
 
 import os

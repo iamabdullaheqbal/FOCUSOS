@@ -92,7 +92,7 @@ export const DocumentIntelligence: React.FC = () => {
         <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 mb-2 flex items-center gap-3">
           <FileText className="w-8 h-8 text-emerald-400" /> Document Intelligence Command Center
         </h1>
-        <p className="text-gray-400 font-medium">Upload specifications or meeting notes. Gemini 2.0 extracts tasks and auto-schedules execution.</p>
+        <p className="text-gray-400 font-medium">Upload specifications or meeting notes. Mistral AI extracts tasks and auto-schedules execution.</p>
       </motion.div>
 
       {/* SECTION 1: Intelligence KPI Row */}

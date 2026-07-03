@@ -27,7 +27,7 @@ export const HowItThinks: React.FC = () => {
 
               {/* Orbiting Nodes */}
               {[
-                { icon: Network, label: "Gemini", delay: 0 },
+                { icon: Network, label: "Mistral", delay: 0 },
                 { icon: Database, label: "Neon DB", delay: -2 },
                 { icon: Lock, label: "Auth", delay: -4 }
               ].map((node, idx) => (
@@ -74,7 +74,7 @@ export const HowItThinks: React.FC = () => {
             <div className="space-y-8">
               {[
                 { title: "Local-First Intelligence", desc: "The core intelligence engine runs deterministically on your device. Your data stays private, and decisions are lightning fast without relying solely on the cloud." },
-                { title: "Cloud Enhanced (Gemini)", desc: "When tasks require deep semantic reasoning, FocusOS seamlessly escalates to Google Gemini, enhancing the local engine without replacing it." },
+                { title: "Cloud Enhanced (Mistral)", desc: "When tasks require deep semantic reasoning, FocusOS seamlessly escalates to Mistral AI, enhancing the local engine without replacing it." },
                 { title: "Digital Twin Verification", desc: "Before any strategy is executed, the Digital Twin simulates the outcome against your personal energy parameters and calendar constraints." }
               ].map((item, idx) => (
                 <motion.div 

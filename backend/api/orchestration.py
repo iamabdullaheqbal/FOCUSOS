@@ -22,7 +22,7 @@ async def run_pipeline(
     image: UploadFile = File(...),
     user_id: str = Depends(get_current_user_id),
 ):
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     if not ai_service:
         raise HTTPException(status_code=503, detail="AI service not available")
     if image.content_type not in ALLOWED_MIMES:
@@ -44,7 +44,7 @@ async def execute_system(
     request: Request,
     user_id: str = Depends(get_current_user_id),
 ):
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     if not ai_service:
         raise HTTPException(status_code=503, detail="AI service not available")
     try:

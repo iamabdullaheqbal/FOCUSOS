@@ -22,6 +22,6 @@ async def process_voice(
 ):
     if not body.transcript.strip():
         raise HTTPException(status_code=400, detail="Transcript is required")
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     result = VoiceService.process_voice_command(body.transcript, ai_service)
     return {"status": "success", "data": result}

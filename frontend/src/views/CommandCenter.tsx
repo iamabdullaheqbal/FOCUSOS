@@ -148,7 +148,7 @@ export const CommandCenter: React.FC = () => {
     if (traceEvent) {
       if (traceEvent.status === 'success') {
           if (traceEvent.data?._inference_source === 'LOCAL_FALLBACK_RECOVERY') return 'Recovered';
-          return traceEvent.data?._inference_source === 'gemini' ? 'Fallback' : 'Completed';
+          return traceEvent.data?._inference_source === 'mistral' ? 'Fallback' : 'Completed';
       }
       if (traceEvent.status === 'error' || traceEvent.status === 'failed') return 'Failed';
       if (traceEvent.status === 'warning') return 'Completed'; 
@@ -184,20 +184,20 @@ export const CommandCenter: React.FC = () => {
 
   // Telemetry Calculations
   const fallbackEvent = trace.find((t: any) => t.data && t.data.fallback_triggered);
-  const geminiEvent = trace.find((t: any) => t.data && t.data._inference_source === 'gemini');
+  const mistralEvent = trace.find((t: any) => t.data && t.data._inference_source === 'mistral');
   
-  const sourceName = fallbackEvent ? (fallbackEvent.data.fallback_failed ? 'Local Recovery' : 'Gemini Fallback') : (geminiEvent ? 'Gemini Fallback' : (trace.length > 0 ? 'Local Engine' : '—'));
-  const fallbackTriggered = (fallbackEvent || geminiEvent) ? 'Yes' : (trace.length > 0 ? 'No' : '—');
-  const fallbackReason = fallbackEvent ? (fallbackEvent.data.fallback_reason || 'API Error') : (geminiEvent ? 'Confidence < Threshold' : (trace.length > 0 ? '—' : '—'));
+  const sourceName = fallbackEvent ? (fallbackEvent.data.fallback_failed ? 'Local Recovery' : 'Mistral Fallback') : (mistralEvent ? 'Mistral Fallback' : (trace.length > 0 ? 'Local Engine' : '—'));
+  const fallbackTriggered = (fallbackEvent || mistralEvent) ? 'Yes' : (trace.length > 0 ? 'No' : '—');
+  const fallbackReason = fallbackEvent ? (fallbackEvent.data.fallback_reason || 'API Error') : (mistralEvent ? 'Confidence < Threshold' : (trace.length > 0 ? '—' : '—'));
   
   const confidences = trace.map((t: any) => t.data?._system_confidence).filter(Boolean);
   const avgConfidence = confidences.length ? Math.round(confidences.reduce((a:number, b:number) => a + b, 0) / confidences.length) : null;
   const sysConfidenceDisplay = avgConfidence ? `${avgConfidence}%` : '—';
 
   const localExecutionsToday = trace.filter((t: any) => t.data && (t.data._inference_source === 'local' || t.data._inference_source === 'LOCAL_FALLBACK_RECOVERY')).length;
-  const geminiFallbacksToday = trace.filter((t: any) => t.data && t.data._inference_source === 'gemini').length;
-  const totalExecs = localExecutionsToday + geminiFallbacksToday;
-  const fallbackRate = totalExecs > 0 ? Math.round((geminiFallbacksToday / totalExecs) * 100) : 0;
+  const mistralFallbacksToday = trace.filter((t: any) => t.data && t.data._inference_source === 'mistral').length;
+  const totalExecs = localExecutionsToday + mistralFallbacksToday;
+  const fallbackRate = totalExecs > 0 ? Math.round((mistralFallbacksToday / totalExecs) * 100) : 0;
   const costReduction = totalExecs > 0 ? Math.round((localExecutionsToday / totalExecs) * 100) : 0;
 return (
     <div className="space-y-6 pb-12">
@@ -261,7 +261,7 @@ return (
             <div className="space-y-3">
                <div className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-white/5">
                  <span className="text-xs text-gray-400 font-mono">Inference Source</span>
-                 <span className={`text-sm font-bold ${sourceName === 'Local Engine' ? 'text-emerald-400' : (sourceName === 'Gemini Fallback' ? 'text-amber-400' : 'text-gray-500')}`}>{sourceName}</span>
+                 <span className={`text-sm font-bold ${sourceName === 'Local Engine' ? 'text-emerald-400' : (sourceName === 'Mistral Fallback' ? 'text-amber-400' : 'text-gray-500')}`}>{sourceName}</span>
                </div>
                <div className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-white/5">
                  <span className="text-xs text-gray-400 font-mono">System Confidence</span>
@@ -295,8 +295,8 @@ return (
                   <span className="text-lg font-mono font-bold text-emerald-400">{localExecutionsToday}</span>
                </div>
                <div className="bg-[#050505] border border-white/5 p-3 rounded-lg flex flex-col justify-center items-center">
-                  <span className="text-[10px] text-gray-500 uppercase tracking-widest mb-1 text-center">Gemini Fallbacks</span>
-                  <span className="text-lg font-mono font-bold text-amber-400">{geminiFallbacksToday}</span>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-widest mb-1 text-center">Mistral Fallbacks</span>
+                  <span className="text-lg font-mono font-bold text-amber-400">{mistralFallbacksToday}</span>
                </div>
             </div>
           </div>
@@ -455,7 +455,7 @@ return (
                 feed.map((event, i) => {
                   const colors = getAgentColor(event.agent);
                   const isLocal = event.data?._inference_source === 'local';
-                  const isFallback = event.data?._inference_source === 'gemini';
+                  const isFallback = event.data?._inference_source === 'mistral';
                   const sysConf = event.data?._system_confidence;
                   
                   return (
@@ -480,7 +480,7 @@ return (
                       )}
                       
                       <p className={`text-xs truncate ${isFallback ? 'text-amber-200/70' : 'text-gray-400'}`} title={event.action}>
-                        {isFallback ? 'Delegated to Gemini: ' + event.action : event.action}
+                        {isFallback ? 'Mistral Fallback: ' + event.action : event.action}
                       </p>
                     </motion.div>
                   )

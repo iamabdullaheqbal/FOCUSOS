@@ -111,7 +111,7 @@ class RescueAgent:
                 }
             ]
             
-            # If risk is extremely high, drop confidence to trigger Gemini enhancement
+            # If risk is extremely high, drop confidence to trigger Mistral enhancement
             sys_confidence = 100
             if risk_level == "High":
                 sys_confidence = 60

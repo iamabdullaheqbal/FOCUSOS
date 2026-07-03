@@ -166,7 +166,7 @@ export const DigitalTwin: React.FC = () => {
             <div className="space-y-3">
               <div className="flex justify-between items-center p-2 rounded bg-black/40 border border-white/5">
                 <span className="text-xs font-bold text-gray-400">Simulation Engine</span>
-                <span className="text-xs font-black text-emerald-400">{simulation?._inference_source === 'gemini' ? 'Gemini Fallback' : 'Local Planner'}</span>
+                <span className="text-xs font-black text-emerald-400">{simulation?._inference_source === 'mistral' ? 'Mistral Fallback' : 'Local Planner'}</span>
               </div>
               <div className="flex justify-between items-center p-2 rounded bg-black/40 border border-white/5">
                 <span className="text-xs font-bold text-gray-400">Last Execution</span>
@@ -239,7 +239,7 @@ export const DigitalTwin: React.FC = () => {
                     </h3>
                     {simulation?._inference_source && (
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${simulation._inference_source === 'local' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' : 'bg-purple-500/20 text-purple-400 border border-purple-500/50'}`}>
-                        {simulation._inference_source === 'local' ? 'Local Engine' : 'Gemini Fallback'}
+                        {simulation._inference_source === 'local' ? 'Local Engine' : 'Mistral Fallback'}
                       </span>
                     )}
                   </div>
@@ -414,7 +414,7 @@ export const DigitalTwin: React.FC = () => {
                               <div>
                                 <span className="text-sm font-black text-white uppercase group-hover:text-cyan-400 transition-colors">{log.scenario_type}</span>
                                 <div className="text-[10px] text-gray-500 uppercase font-bold mt-1 tracking-widest">
-                                  {new Date(log.created_at).toLocaleTimeString()} • {log.simulation_result?._inference_source === 'gemini' ? 'Gemini Fallback' : 'Local Engine'}
+                                  {new Date(log.created_at).toLocaleTimeString()} • {log.simulation_result?._inference_source === 'mistral' ? 'Mistral Fallback' : 'Local Engine'}
                                 </div>
                               </div>
                               <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${successDelta >= 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>

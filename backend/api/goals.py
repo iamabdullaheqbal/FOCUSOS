@@ -92,7 +92,7 @@ async def create_goal(
         raise HTTPException(status_code=400, detail="Title is required")
 
     from services.goal_service import GoalService
-    ai_service = request.app.state.gemini_service
+    ai_service = request.app.state.ai_service
     try:
         goal = GoalService.create_goal(
             user_id=user_id,

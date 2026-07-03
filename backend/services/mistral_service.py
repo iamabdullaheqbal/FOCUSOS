@@ -263,16 +263,15 @@ class MistralService:
         messages.append({"role": "user", "content": prompt})
 
         try:
-            stream_response = self._client.chat.complete(
+            with self._client.chat.stream(
                 model=self._model_name,
                 messages=messages,
-                stream=True,
                 temperature=temperature,
-            )
-            for chunk in stream_response:
-                content = chunk.data.choices[0].delta.content
-                if content is not None:
-                    yield content
+            ) as stream:
+                for chunk in stream:
+                    content = chunk.data.choices[0].delta.content
+                    if content is not None:
+                        yield content
         except Exception as exc:
             logger.error("Streaming error: %s", exc)
             raise MistralServiceError(f"Streaming failed: {exc}") from exc

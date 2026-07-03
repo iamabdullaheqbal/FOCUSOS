@@ -8,7 +8,7 @@ class Router:
     @classmethod
     def route_local(cls, nlu_payload: Dict[str, Any], user_id: str) -> Dict[str, Any]:
         """
-        Executes simple commands locally. Returns None if it should be delegated to Gemini.
+        Executes simple commands locally. Returns None if it should be delegated to Mistral.
         """
         intent = nlu_payload.get("intent")
         entities = nlu_payload.get("entities", {})

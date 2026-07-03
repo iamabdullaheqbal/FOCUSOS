@@ -5,7 +5,6 @@ Analyzes historical task data to generate productivity metrics.
 """
 
 from typing import Dict, Any, List
-from database.db import db
 import json
 
 class AccountabilityAgent:
@@ -29,17 +28,17 @@ class AccountabilityAgent:
 
     def generate_metrics(self, active_tasks: List[Dict[str, Any]], completed_tasks: List[Dict[str, Any]], overdue_tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyzes task execution and stores/returns metrics."""
-        prompt = f"""
-        You are the DeadlineOS Accountability Agent. Analyze the user's execution history.
-        
-        Active Tasks: {json.dumps(active_tasks)}
-        Completed Tasks: {json.dumps(completed_tasks)}
-        Overdue Tasks: {json.dumps(overdue_tasks)}
-        
-        Generate a brutal but fair accountability report. Calculate metrics out of 100.
-        """
-        
-        response_data = self.ai_service.generate_structured(prompt, self._get_schema())
+        system_prompt = "You are the DeadlineOS Accountability Agent. Generate a brutal but fair accountability report. Calculate metrics out of 100."
+        user_prompt = f"""
+Active Tasks: {json.dumps(active_tasks)}
+Completed Tasks: {json.dumps(completed_tasks)}
+Overdue Tasks: {json.dumps(overdue_tasks)}
+"""
+        response_data = self.ai_service.generate_structured(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            schema=self._get_schema(),
+        )
         
         # Save to DB
         try:

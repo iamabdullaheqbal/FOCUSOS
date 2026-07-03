@@ -183,7 +183,7 @@ export const Vision: React.FC = () => {
               <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
                 <GlassCard className="h-full min-h-[500px] flex flex-col items-center justify-center text-center p-12 border-2 border-dashed border-blue-500/20">
                   <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
-                  <h3 className="text-xl font-bold text-white">Gemini Multimodal Processing</h3>
+                  <h3 className="text-xl font-bold text-white">Mistral Multimodal Processing</h3>
                   <p className="text-gray-400 mt-2 max-w-sm text-sm">Performing OCR, inferring spatial context, and serializing tasks into PostgreSQL...</p>
                 </GlassCard>
               </motion.div>

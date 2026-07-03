@@ -23,17 +23,17 @@ async def get_events(
     end: Optional[str] = None,
     user_id: str = Depends(get_current_user_id),
 ):
-    return {"status": "success", "data": CalendarService.get_events(start_date=start, end_date=end)}
+    return {"status": "success", "data": CalendarService.get_events(start_date=start, end_date=end, user_id=user_id)}
 
 
 @router.get("/intelligence")
 async def get_intelligence(user_id: str = Depends(get_current_user_id)):
-    return {"status": "success", "data": CalendarService.get_intelligence()}
+    return {"status": "success", "data": CalendarService.get_intelligence(user_id=user_id)}
 
 
 @router.post("/reschedule")
 async def reschedule(body: RescheduleIn, user_id: str = Depends(get_current_user_id)):
-    success = CalendarService.reschedule_event(event_id=body.id, new_start=body.start, new_end=body.end)
+    success = CalendarService.reschedule_event(event_id=body.id, new_start=body.start, new_end=body.end, user_id=user_id)
     if success:
         return {"status": "success"}
     from fastapi import HTTPException
