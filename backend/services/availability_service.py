@@ -1,7 +1,16 @@
 from typing import Dict, Any
 from datetime import datetime, timezone
-from models.task import Task
 from services.calendar_service import CalendarService
+
+
+def _sync_session():
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+    from config import settings
+    sync_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+    engine = create_engine(sync_url, pool_pre_ping=True, pool_size=2)
+    return Session(engine), engine
+
 
 class AvailabilityService:
     @classmethod
@@ -31,8 +40,17 @@ class AvailabilityService:
         scheduled_hours = sum([cls._calculate_hours(e) for e in today_events])
         focus_hours = sum([cls._calculate_hours(e) for e in today_events if e.get("type") == "focus_block"])
         
-        # Calculate Pending Task estimated hours
-        pending_tasks = Task.query.filter(Task.status != 'done').all()
+        # Calculate Pending Task estimated hours using a sync session
+        from models.task import Task
+        from sqlalchemy import select
+        session, engine = _sync_session()
+        try:
+            pending_tasks = session.execute(
+                select(Task).where(Task.status != 'done')
+            ).scalars().all()
+        finally:
+            session.close()
+            engine.dispose()
         pending_hours = sum([t.estimated_hours for t in pending_tasks if t.estimated_hours])
         
         # Calculate available hours based on user's default daily limit (assumed 8 for now)
