@@ -9,33 +9,39 @@ class SemanticMatcher:
     """
     
     @classmethod
-    def find_best_match(cls, normalized_transcript: str) -> Tuple[Dict[str, Any], float, str]:
+    def find_best_match(cls, normalized_transcript: str):
         """
         Returns (Matched Command Dict, Confidence Score 0-100, Matched Keyword)
         """
         if not normalized_transcript:
             return None, 0.0, ""
-            
+
+        text_lower = normalized_transcript.lower()
         all_commands = CommandLibrary.get_all_commands()
-        
-        best_cmd = None
+
+        # ── Fast-path: hard-coded high-signal triggers ────────────────────────
+        # These words are unambiguous enough to skip fuzzy scoring entirely.
+        _MEETING_SIGNALS = {"meeting", "appointment", "schedule with", "meet with",
+                            "book a call", "schedule a call", "set up a call"}
+        if any(sig in text_lower for sig in _MEETING_SIGNALS):
+            meeting_cmd = CommandLibrary.get_command_by_intent("meeting_scheduling")
+            if meeting_cmd:
+                return meeting_cmd, 95.0, "meeting"
+
+        best_cmd    = None
         highest_score = 0.0
-        best_keyword = ""
-        
-        # We can extract the keyword that matched best
+        best_keyword  = ""
+
         for cmd in all_commands:
             keywords = cmd.get("keywords", [])
-            
-            # Using fuzz.partial_ratio is good for voice commands where 
-            # the user might say extra words before or after the command.
-            # WRatio is even better for general fuzzy matching.
-            result = process.extractOne(normalized_transcript.lower(), keywords, scorer=fuzz.WRatio)
-            
+            result = process.extractOne(
+                text_lower, keywords, scorer=fuzz.WRatio
+            )
             if result:
                 match_str, score, _ = result
                 if score > highest_score:
                     highest_score = score
-                    best_cmd = cmd
-                    best_keyword = match_str
-                    
+                    best_cmd      = cmd
+                    best_keyword  = match_str
+
         return best_cmd, highest_score, best_keyword

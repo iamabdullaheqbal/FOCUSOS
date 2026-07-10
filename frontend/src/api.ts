@@ -438,8 +438,11 @@ export const FocusOSApi = {
 
   // ── VOICE COPILOT ────────────────────────────────────────────────────────
 
-  async processVoiceTranscript(transcript: string) {
-    const response = await apiClient.post('/voice/process', { transcript });
+  async processVoiceTranscript(transcript: string, timezone?: string) {
+    const response = await apiClient.post('/voice/process', {
+      transcript,
+      timezone: timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
     return response.data;
   },
 

@@ -18,13 +18,14 @@ class ExecutionEngine:
         cls,
         source: str,
         transcript: str,
-        ai_service,  # MistralService instance (or None)
+        ai_service,
         user_id: Optional[str] = None,
+        timezone: str = "UTC",
     ) -> Dict[str, Any]:
         t0 = time.time()
 
         # 1. Local NLU pipeline
-        nlu_result   = IntentEngine.process(transcript, user_id)
+        nlu_result   = IntentEngine.process(transcript, user_id, timezone=timezone)
         intent       = nlu_result.get("intent")
         confidence   = nlu_result.get("confidence", 0)
         entities     = nlu_result.get("entities", {})
@@ -48,7 +49,24 @@ class ExecutionEngine:
                 entities.update(mistral_nlu.get("entities", {}))
                 confidence = mistral_nlu.get("confidence", 50)
                 message    = mistral_nlu.get("voice_response", "")
-                agent_name = "MistralAgent"
+                # Resolve agent_name from the triggered agents list, falling back to registry lookup
+                triggered = mistral_nlu.get("agents_triggered", [])
+                if triggered:
+                    agent_name = triggered[0]
+                else:
+                    # Map intent → canonical agent name
+                    _INTENT_AGENT_MAP = {
+                        "meeting_scheduling": "MeetingScheduler",
+                        "task_creation":      "TaskService",
+                        "goal_creation":      "GoalService",
+                        "planning":           "PlanningAgent",
+                        "rescue":             "RescueAgent",
+                        "digital_twin":       "DigitalTwinAgent",
+                        "navigation":         "Navigation",
+                        "calendar_query":     "Navigation",
+                        "analytics_query":    "Navigation",
+                    }
+                    agent_name = _INTENT_AGENT_MAP.get(intent, "System")
             except Exception as err:
                 import logging
                 logging.getLogger(__name__).warning("Mistral fallback failed: %s", err)
@@ -84,6 +102,7 @@ class ExecutionEngine:
                 "source":     source,
                 "ai_service": ai_service,
                 "intent":     intent,
+                "timezone":   timezone,
             }
             # Inject the raw transcript so executors like MeetingScheduler can parse it
             entities["_original_transcript"] = transcript

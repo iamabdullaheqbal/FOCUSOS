@@ -9,15 +9,26 @@ class CommandLibrary:
         {
             "intent": "meeting_scheduling",
             "keywords": [
+                # explicit schedule/book/arrange
                 "schedule a meeting", "schedule me a meeting", "set up a meeting",
                 "book a meeting", "arrange a meeting", "schedule meeting with",
                 "add meeting", "create meeting", "set a meeting", "meeting with",
-                "schedule an appointment", "book an appointment"
+                "schedule an appointment", "book an appointment",
+                # natural "with <person> at/on" patterns
+                "schedule my meeting with", "schedule a call with", "schedule call with",
+                "book a call with", "set up a call with", "arrange a call with",
+                # just "meeting" + time/person triggers
+                "meeting at", "meeting on", "meeting tomorrow", "meeting today",
+                "meeting next", "appointment with", "appointment at", "appointment on",
+                # common voice phrasings
+                "i need to meet", "i want to meet", "set meeting", "fix a meeting",
+                "put a meeting", "add a meeting", "add appointment",
+                "schedule with", "meet with",
             ],
             "agent": "MeetingScheduler",
             "required_entities": [],
-            "optional_entities": ["target_name", "target_date", "duration"],
-            "minimum_confidence": 70,
+            "optional_entities": ["attendee", "target_name", "target_date", "duration"],
+            "minimum_confidence": 65,
             "execution_strategy": "synchronous",
             "description": "Schedules a meeting or appointment and saves it to the calendar."
         },

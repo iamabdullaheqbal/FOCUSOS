@@ -12,13 +12,11 @@ class IntentEngine:
     """
     
     @classmethod
-    def process(cls, raw_transcript: str, user_id: str = None, source: str = "voice") -> Dict[str, Any]:
+    def process(cls, raw_transcript: str, user_id: str = None, source: str = "voice", timezone: str = "UTC") -> Dict[str, Any]:
         normalized = Normalizer.normalize(raw_transcript)
         
-        # 1. Semantic Match
         matched_cmd, fuzzy_score, keyword = SemanticMatcher.find_best_match(normalized)
         
-        # Default fallback if absolutely no match is found
         if not matched_cmd:
             return {
                 "intent": "unknown",
@@ -30,14 +28,12 @@ class IntentEngine:
             
         intent = matched_cmd["intent"]
         
-        # 2. Extract Entities
-        entities = EntityExtractor.extract(normalized, intent)
+        # 2. Extract Entities — pass timezone so dates are interpreted in user's local zone
+        entities = EntityExtractor.extract(normalized, intent, timezone=timezone)
         
-        # 3. Context & Confidence
         context = ContextMemory.get_context(user_id) if user_id else {}
         confidence = ConfidenceEngine.calculate_confidence(matched_cmd, fuzzy_score, entities, context)
         
-        # 4. Update Context Memory
         if user_id and intent != "unknown":
             ContextMemory.update_context(user_id, intent, entities, source)
             

@@ -19,6 +19,7 @@ class VoiceCopilotAgent:
         Analyze the following voice transcript: "{transcript}"
 
         Determine the user's intent. The allowed intents are:
+        - meeting_scheduling   ← use this when the user wants to schedule, book, set up, or arrange a meeting or appointment
         - task_creation
         - goal_creation
         - planning
@@ -29,14 +30,18 @@ class VoiceCopilotAgent:
         - goal_query
         - habit_query
         - intervention_query
+        - navigation
         - unknown
 
-        Extract any relevant entities (e.g. target_name, target_date).
-        Generate a 'voice_response' that the system will speak back to the user (keep it concise, professional, and agentic). If the intent is unknown, suggest a valid action.
-        Estimate your confidence in this intent detection (0-100).
-        Identify which backend agents need to be invoked to fulfill this request.
+        IMPORTANT RULES:
+        - If the transcript mentions "meeting", "appointment", "call", or "schedule with <person>", the intent MUST be "meeting_scheduling".
+        - For meeting_scheduling, extract "attendee" (the person's name after "with"), "target_date" (ISO 8601 datetime string for when the meeting starts, e.g. "2026-07-10T21:00:00+00:00"), and "duration" (e.g. "1 hour").
+        - For target_date, resolve relative times like "today at 9pm", "tomorrow at 3pm" into a full ISO 8601 datetime. Today's date is {__import__('datetime').datetime.utcnow().strftime('%Y-%m-%d')}.
+        - Generate a 'voice_response' that confirms the action taken (concise, professional, agentic).
+        - Estimate your confidence in this intent detection (0-100).
+        - Set "agents_triggered" to ["MeetingScheduler"] when intent is meeting_scheduling.
         """
-        
+
         schema = {
             "type": "OBJECT",
             "properties": {
@@ -46,7 +51,9 @@ class VoiceCopilotAgent:
                     "type": "OBJECT",
                     "properties": {
                         "target_name": {"type": "STRING"},
-                        "target_date": {"type": "STRING"}
+                        "attendee":    {"type": "STRING"},
+                        "target_date": {"type": "STRING"},
+                        "duration":    {"type": "STRING"},
                     }
                 },
                 "voice_response": {"type": "STRING"},

@@ -9,7 +9,7 @@ class EntityExtractor:
     """
     
     @classmethod
-    def extract(cls, transcript: str, intent: str) -> Dict[str, Any]:
+    def extract(cls, transcript: str, intent: str, timezone: str = "UTC") -> Dict[str, Any]:
         entities = {}
         text_lower = transcript.lower()
         
@@ -50,42 +50,97 @@ class EntityExtractor:
 
         # 2. Extract Dates/Times
         from dateparser.search import search_dates
-        from datetime import datetime, timezone as tz
-        now = datetime.now(tz.utc)
+        from datetime import datetime, timezone as tz, timedelta
+        import pytz
+
+        # ── Resolve user's local "now" in their timezone ──────────────────────
+        try:
+            user_tz = pytz.timezone(timezone)
+        except Exception:
+            user_tz = pytz.utc
+
+        now_utc   = datetime.now(tz.utc)
+        now_local = now_utc.astimezone(user_tz)
+
+        # ── Step A: regex-extract explicit time first (most reliable) ──────────
+        # Matches: "9pm", "9:30pm", "21:00", "9 pm", "9:00 PM"
+        _TIME_RE = re.compile(
+            r'\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b'
+            r'|\b(\d{2}):(\d{2})\b',
+            re.IGNORECASE
+        )
+        explicit_time = None
+        for m in _TIME_RE.finditer(transcript):
+            if m.group(3):                     # 12-h match
+                hour   = int(m.group(1))
+                minute = int(m.group(2) or 0)
+                merid  = m.group(3).lower()
+                if merid == "pm" and hour != 12:
+                    hour += 12
+                elif merid == "am" and hour == 12:
+                    hour = 0
+            else:                              # 24-h match
+                hour   = int(m.group(4))
+                minute = int(m.group(5))
+            explicit_time = (hour, minute)
+            break
+
+        # ── Step B: dateparser resolves the date using user's local now ────────
         try:
             dates_found = search_dates(
                 transcript,
                 settings={
-                    'PREFER_DATES_FROM': 'future',
-                    'RELATIVE_BASE': now.replace(tzinfo=None),   # naive base avoids year drift
+                    'PREFER_DATES_FROM':        'future',
+                    'RELATIVE_BASE':            now_local.replace(tzinfo=None),  # naive local
                     'RETURN_AS_TIMEZONE_AWARE': False,
-                    'PREFER_DAY_OF_MONTH': 'current',
-                    'PREFER_MONTH_OF_YEAR': 'current',
-                    'RETURN_TIME_AS_PERIOD': False,
+                    'PREFER_DAY_OF_MONTH':      'current',
+                    'PREFER_MONTH_OF_YEAR':     'current',
+                    'RETURN_TIME_AS_PERIOD':    False,
+                    'TIMEZONE':                 timezone,
                 }
             )
         except Exception:
             dates_found = None
 
+        best_dt  = None   # naive local datetime
+        best_raw = None
+
         if dates_found:
-            # Pick the best match — prefer entries with a real time component
-            # (skip pure words like "me" that dateparser sometimes misparses)
-            best_dt = None
-            best_raw = None
             for raw_str, dt in dates_found:
-                # Skip if dateparser matched a noise word like "me", "a", etc.
                 if len(raw_str.strip()) <= 2:
                     continue
-                # Prefer entries that carry actual time info (not midnight default)
                 if best_dt is None or (dt.hour != 0 and best_dt.hour == 0):
-                    best_dt = dt
+                    best_dt  = dt
                     best_raw = raw_str
 
-            if best_dt:
-                # Attach UTC timezone
-                aware_dt = best_dt.replace(tzinfo=tz.utc)
-                entities["target_date"] = aware_dt.isoformat()
-                entities["target_date_raw"] = best_raw
+        # ── Step C: overlay regex time onto parsed date ────────────────────────
+        if best_dt is not None and explicit_time is not None:
+            if best_dt.hour == 0 and best_dt.minute == 0:
+                best_dt = best_dt.replace(
+                    hour=explicit_time[0], minute=explicit_time[1],
+                    second=0, microsecond=0
+                )
+        elif best_dt is None and explicit_time is not None:
+            # No date found — use today in user's local timezone
+            best_dt = now_local.replace(
+                hour=explicit_time[0], minute=explicit_time[1],
+                second=0, microsecond=0, tzinfo=None
+            )
+            # If that local time already passed, push to tomorrow
+            if user_tz.localize(best_dt) < now_local:
+                best_dt = best_dt + timedelta(days=1)
+            best_raw = transcript
+
+        # ── Step D: localise (user tz) → convert to UTC → store as UTC ISO ─────
+        if best_dt is not None:
+            try:
+                local_aware = user_tz.localize(best_dt, is_dst=None)
+            except Exception:
+                local_aware = user_tz.localize(best_dt)
+            utc_dt = local_aware.astimezone(pytz.utc)
+            entities["target_date"]       = utc_dt.isoformat()        # UTC, stored in DB
+            entities["target_date_raw"]   = best_raw or transcript
+            entities["target_date_local"] = local_aware.isoformat()   # local, for voice_response
             
         # Extract Durations (e.g. "for 30 minutes")
         duration_match = re.search(r'for\s+(\d+)\s+(minute|hour|day)s?', text_lower)

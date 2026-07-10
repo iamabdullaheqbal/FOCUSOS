@@ -76,7 +76,9 @@ export const VoiceCopilot: React.FC = () => {
     if (!text.trim()) return;
     setLoading(true);
     try {
-      const res = await FocusOSApi.processVoiceTranscript(text);
+      // Pass the browser's IANA timezone so the backend stores times correctly
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const res = await FocusOSApi.processVoiceTranscript(text, timezone);
       setResult(res.data);
       if (res.data.nlu?.voice_response) {
         speakResponse(res.data.nlu.voice_response);

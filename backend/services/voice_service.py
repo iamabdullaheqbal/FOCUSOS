@@ -6,9 +6,9 @@ from typing import Dict, Any, Optional
 class VoiceService:
 
     @classmethod
-    def process_voice_command(cls, transcript: str, ai_service, user_id: Optional[str] = None) -> Dict[str, Any]:
+    def process_voice_command(cls, transcript: str, ai_service, user_id: Optional[str] = None, timezone: str = "UTC") -> Dict[str, Any]:
         from services.local_intelligence.execution_engine import ExecutionEngine
-        result = ExecutionEngine.execute("voice", transcript, ai_service, user_id)
+        result = ExecutionEngine.execute("voice", transcript, ai_service, user_id, timezone=timezone)
         return {
             "transcript": transcript,
             "nlu": {
