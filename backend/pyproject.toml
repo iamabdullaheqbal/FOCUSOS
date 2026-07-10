@@ -9,29 +9,22 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
     "python-multipart>=0.0.9",       # file uploads
-
     # ── Database ───────────────────────────────────────────
     "sqlalchemy[asyncio]>=2.0.36",
     "asyncpg>=0.30.0",               # async PostgreSQL driver
     "psycopg2-binary>=2.9.9",        # sync fallback used by services
-
     # ── Auth ───────────────────────────────────────────────
     "pyjwt[crypto]>=2.9.0",
     "werkzeug>=3.1.0",               # password hashing (generate/check_password_hash)
-
     # ── Config ─────────────────────────────────────────────
     "python-dotenv>=1.0.1",
-
     # ── Rate limiting ──────────────────────────────────────
     "slowapi>=0.1.9",
-
     # ── Mistral AI ────────────────────────────────────────
     "mistralai>=1.0.0",
-
     # ── HTTP client ────────────────────────────────────────
     "httpx>=0.27.0",
     "aiohttp>=3.10.0",
-
     # ── Document processing ────────────────────────────────
     "pypdf>=4.0.0",
     "python-docx>=1.1.0",
@@ -39,10 +32,8 @@ dependencies = [
     "pillow-heif>=0.18.0",
     "pytesseract>=0.3.13",
     "opencv-python-headless>=4.10.0",
-
     # ── PDF report generation ──────────────────────────────
     "reportlab>=4.2.0",
-
     # ── Data / utilities ───────────────────────────────────
     "pydantic>=2.8.0",
     "numpy>=1.26.0",
@@ -51,14 +42,13 @@ dependencies = [
     "rapidfuzz>=3.9.0",
     "cachetools>=5.4.0",
     "cryptography>=43.0.0",
-
     # ── Monitoring ─────────────────────────────────────────
     "sentry-sdk[fastapi]>=2.14.0",
-
     # ── Testing ────────────────────────────────────────────
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
     "httpx>=0.27.0",                 # async test client
+    "python-pptx>=1.0.2",
 ]
 
 [build-system]
