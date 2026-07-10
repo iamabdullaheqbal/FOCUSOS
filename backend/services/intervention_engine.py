@@ -46,6 +46,8 @@ class InterventionEngine:
             active_types = {t.type for t in active_threats}
 
             new_threats = []
+
+            # 1. Overdue tasks → deadline_collision
             for task in overdue:
                 if not any(task.title in m for m in active_msgs):
                     t = Threat(user_id=user_id, type="deadline_collision", severity="Critical",
@@ -54,6 +56,7 @@ class InterventionEngine:
                     new_threats.append(t)
                     active_msgs.append(t.message)
 
+            # 2. Capacity overload
             avail = AvailabilityService.get_current_availability()
             if avail.get("utilization_percentage", 0) > 95 and "capacity_overload" not in active_types:
                 t = Threat(user_id=user_id, type="capacity_overload", severity="High",
@@ -61,6 +64,43 @@ class InterventionEngine:
                            message=f"Workload capacity at {avail['utilization_percentage']}%. Burnout risk high.",
                            details=avail)
                 new_threats.append(t)
+                active_types.add("capacity_overload")
+
+            # 3. Goal drift — goals whose status is 'at_risk'
+            from models.goal import Goal
+            at_risk_goals = session.execute(
+                select(Goal).where(Goal.user_id == user_id, Goal.status == "at_risk")
+            ).scalars().all()
+            for goal in at_risk_goals:
+                if not any(goal.title in m for m in active_msgs):
+                    t = Threat(
+                        user_id=user_id, type="goal_drift", severity="Medium",
+                        source="Goals",
+                        message=f"Goal '{goal.title}' is deviating from its target trajectory.",
+                        details={"goal_id": goal.id},
+                    )
+                    new_threats.append(t)
+                    active_msgs.append(t.message)
+
+            # 4. Habit degradation — habits with a broken streak (current_streak < 1)
+            from models.goal import Habit
+            broken_habits = session.execute(
+                select(Habit).where(
+                    Habit.user_id == user_id,
+                    Habit.archived == False,  # noqa: E712
+                    Habit.current_streak < 1,
+                )
+            ).scalars().all()
+            for habit in broken_habits:
+                if not any(habit.name in m for m in active_msgs):
+                    t = Threat(
+                        user_id=user_id, type="habit_degradation", severity="Low",
+                        source="Habits",
+                        message=f"Habit streak for '{habit.name}' has been broken.",
+                        details={"habit_id": habit.id},
+                    )
+                    new_threats.append(t)
+                    active_msgs.append(t.message)
 
             if new_threats:
                 session.add_all(new_threats)

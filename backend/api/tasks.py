@@ -13,6 +13,7 @@ from sqlalchemy import select, func
 from database.db import get_db
 from models.task import Task
 from utils.auth import get_current_user_id
+from services.intervention_engine import InterventionEngine
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -107,6 +108,7 @@ async def create_task(
     db.add(task)
     await db.commit()
     await db.refresh(task)
+    InterventionEngine.trigger_evaluation(user_id)
     return {"task": task.to_dict(), "message": "Task created successfully"}
 
 
@@ -160,6 +162,7 @@ async def update_task(
     task.updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(task)
+    InterventionEngine.trigger_evaluation(user_id)
     return {"task": task.to_dict(), "message": "Task updated"}
 
 
@@ -175,6 +178,7 @@ async def delete_task(
         raise HTTPException(status_code=404, detail="Task not found")
     await db.delete(task)
     await db.commit()
+    InterventionEngine.trigger_evaluation(user_id)
     return {"message": "Task deleted", "id": task_id}
 
 
@@ -198,4 +202,5 @@ async def log_progress(
     task.updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(task)
+    InterventionEngine.trigger_evaluation(user_id)
     return {"task": task.to_dict(), "completion_percentage": task.completion_percentage, "message": "Progress logged"}

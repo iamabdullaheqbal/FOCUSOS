@@ -5,7 +5,7 @@ import uuid
 import jwt
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from sqlalchemy import select
 from database.db import AsyncSessionLocal
 from models.user import User
@@ -35,6 +35,45 @@ def _make_token(extra: dict = {}) -> str:
         **extra,
     }
     return jwt.encode(payload, _secret(), algorithm="HS256")
+
+
+@router.post("/simulate-twin/{user_id}")
+async def simulate_twin(user_id: str, request: Request):
+    """
+    Run a quick Digital Twin simulation for a given user using their live DB tasks.
+    Called by the frontend via FocusOSApi.runDigitalTwinSimulation(userId).
+    """
+    from sqlalchemy import select
+    from models.task import Task
+    from services.availability_service import AvailabilityService
+    from agents.digital_twin_agent import DigitalTwinAgent
+
+    ai_service = request.app.state.ai_service
+    if not ai_service:
+        raise HTTPException(status_code=503, detail="AI service not available")
+
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(Task).where(Task.user_id == user_id, Task.status != "done")
+        )
+        tasks = [t.to_dict() for t in result.scalars().all()]
+
+    if not tasks:
+        return {"status": "success", "message": "No active tasks to simulate.", "data": {}}
+
+    availability = AvailabilityService.get_current_availability()
+    # Default worst-case scenario: delay the first task by 1 day
+    scenario = {
+        "action": "delay_task",
+        "task": tasks[0].get("title", "Task"),
+        "delay_days": 1,
+    }
+
+    try:
+        result = DigitalTwinAgent(ai_service).simulate_scenario(tasks, scenario, availability)
+        return {"status": "success", "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Simulation failed: {e}")
 
 
 @router.post("/start")

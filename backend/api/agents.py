@@ -352,8 +352,30 @@ async def run_digital_twin(
         t0 = time.time()
         _set("twin", "running")
         result = DigitalTwinAgent(ai_service).simulate_scenario(tasks, body.scenario, availability)
-        TelemetryService.log_execution("Digital Twin Agent", "Simulation", "success", t0, 90)
+        TelemetryService.log_execution("Digital Twin Agent", "Simulation", "success", t0, 90, user_id=user_id)
         _set("twin", "done")
+
+        # Persist simulation log
+        from models.telemetry import TwinSimulationLog
+        current_risk = result.get("current_state", {}).get("risk_score")
+        projected_risk = result.get("projected_state", {}).get("risk_score")
+        if isinstance(projected_risk, str):
+            projected_risk = None
+        log = TwinSimulationLog(
+            user_id=user_id,
+            scenario_type=body.scenario.get("action", "CUSTOM"),
+            current_success_probability=result.get("current_state", {}).get("success_probability"),
+            projected_success_probability=result.get("projected_state", {}).get("success_probability"),
+            current_risk_score=current_risk,
+            projected_risk_score=projected_risk,
+            capacity_impact=result.get("capacity_impact"),
+            schedule_stability=result.get("schedule_stability"),
+            scenario_payload=body.scenario,
+            simulation_result=result,
+        )
+        db.add(log)
+        await db.commit()
+
         return {"agent": "twin", "status": "success", "data": result, "timestamp": _now_iso()}
     except Exception as e:
         _set("twin", "error")
