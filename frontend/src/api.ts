@@ -222,7 +222,7 @@ export const FocusOSApi = {
   },
 
   async executeSystemOrchestration() {
-    const response = await apiClient.post('/orchestration/execute', {});
+    const response = await apiClient.post('/orchestration/execute', {}, { timeout: 60000 });
     emitEvent('COMMAND_CENTER_REFRESH');
     return response.data;
   },

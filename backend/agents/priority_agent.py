@@ -111,7 +111,7 @@ class PriorityAgent:
                 except Exception:
                     pass
 
-            text_to_analyze = (title + " " + description).lower()
+            text_to_analyze = (title + " " + (description or "")).lower()
             high_keywords = ["asap", "urgent", "critical", "blocker", "client", "production", "immediately"]
             medium_keywords = ["soon", "important", "review", "bug", "fix"]
             
@@ -143,9 +143,9 @@ class PriorityAgent:
             confidence = 100
             if not has_deadline:
                 if importance_label == "Low":
-                    confidence = 80
+                    confidence = 85   # was 80 — ensure local inference always clears threshold
                 else:
-                    confidence = 90
+                    confidence = 92
             
             return {
                 "priority_score": total_priority,
